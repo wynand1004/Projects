@@ -36,7 +36,7 @@ pipe1_top.penup()
 pipe1_top.color("green")
 pipe1_top.shape("square")
 pipe1_top.shapesize(stretch_wid=18, stretch_len=3, outline=None)
-pipe1_top.goto(0, 250)
+pipe1_top.goto(300, 250)
 pipe1_top.dx = -2
 pipe1_top.dy = 0
 
@@ -46,7 +46,7 @@ pipe1_bottom.penup()
 pipe1_bottom.color("green")
 pipe1_bottom.shape("square")
 pipe1_bottom.shapesize(stretch_wid=18, stretch_len=3, outline=None)
-pipe1_bottom.goto(0, -250)
+pipe1_bottom.goto(300, -250)
 pipe1_bottom.dx = -2
 pipe1_bottom.dy = 0
 
@@ -54,7 +54,10 @@ gravity = -0.2
 
 # Define function / method
 def go_up():
-    player.dy += 9
+    player.dy += 18
+    
+    if player.dy > 18:
+        player.dy = 18
 
 # Keyboard binding
 wn.listen()
@@ -82,7 +85,20 @@ while True:
     
     x = pipe1_bottom.xcor()
     x += pipe1_bottom.dx
-    pipe1_bottom.setx(x) 
+    pipe1_bottom.setx(x)
+    
+    # Return pipes to start
+    if pipe1_top.xcor() < -350:
+        pipe1_top.setx(350)
+        pipe1_bottom.setx(350)
+    
+    # Check for collisions with pipes
+    # Pipe 1
+    if (player.xcor() + 30 > pipe1_top.xcor() - 30) and (player.xcor() - 30 < pipe1_top.xcor() + 30):
+        if (player.ycor() + 30 > pipe1_top.ycor() - 180) or (player.ycor() - 30 < pipe1_bottom.ycor() + 180):
+            print("COLLISION")
+        else:
+            print("NO COLLISION")
 
 
 wn.mainloop()
