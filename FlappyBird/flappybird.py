@@ -38,6 +38,7 @@ pipe1_top.shapesize(stretch_wid=18, stretch_len=3, outline=None)
 pipe1_top.goto(300, 250)
 pipe1_top.dx = -2
 pipe1_top.dy = 0
+pipe1_top.value = 1
 
 pipe1_bottom = turtle.Turtle()
 pipe1_bottom.speed(0)
@@ -58,6 +59,7 @@ pipe2_top.shapesize(stretch_wid=18, stretch_len=3, outline=None)
 pipe2_top.goto(600, 300)
 pipe2_top.dx = -2
 pipe2_top.dy = 0
+pipe2_top.value = 1
 
 pipe2_bottom = turtle.Turtle()
 pipe2_bottom.speed(0)
@@ -82,6 +84,11 @@ def go_up():
 wn.listen()
 wn.onkeypress(go_up, "space")
 
+
+# Initialize game variables
+player.score = 0
+print("Score: {}".format(player.score))
+
 # Main Game Loop
 while True:
     # Pause
@@ -96,6 +103,11 @@ while True:
     y = player.ycor()
     y += player.dy
     player.sety(y)
+    
+    # Bottom Border
+    if player.ycor() < -390:
+        player.dy = 0
+        player.sety(-390)
 
     # Move Pipe 1
     x = pipe1_top.xcor()
@@ -110,6 +122,7 @@ while True:
     if pipe1_top.xcor() < -350:
         pipe1_top.setx(350)
         pipe1_bottom.setx(350)
+        pipe1_top.value = 1
 
     # Move Pipe 2
     x = pipe2_top.xcor()
@@ -124,21 +137,30 @@ while True:
     if pipe2_top.xcor() < -350:
         pipe2_top.setx(350)
         pipe2_bottom.setx(350)
+        pipe2_top.value = 1
 
     # Check for collisions with pipes
     # Pipe 1
     if (player.xcor() + 10 > pipe1_top.xcor() - 30) and (player.xcor() - 10 < pipe1_top.xcor() + 30):
         if (player.ycor() + 10 > pipe1_top.ycor() - 180) or (player.ycor() - 10 < pipe1_bottom.ycor() + 180):
             print("COLLISION")
-        else:
-            print("NO COLLISION")
+    
+    # Check for score        
+    if pipe1_top.xcor() + 30 < player.xcor() - 10:
+        player.score += pipe1_top.value
+        pipe1_top.value = 0
+        print("Score: {}".format(player.score))
 
     # Check for collisions with pipes
     # Pipe 2
     if (player.xcor() + 10 > pipe2_top.xcor() - 30) and (player.xcor() - 10 < pipe2_top.xcor() + 30):
         if (player.ycor() + 10 > pipe2_top.ycor() - 180) or (player.ycor() - 30 < pipe2_bottom.ycor() + 180):
             print("COLLISION")
-        else:
-            print("NO COLLISION")
+
+    # Check for score        
+    if pipe2_top.xcor() + 30 < player.xcor() - 10:
+        player.score += pipe2_top.value
+        pipe2_top.value = 0
+        print("Score: {}".format(player.score))
 
 wn.mainloop()
