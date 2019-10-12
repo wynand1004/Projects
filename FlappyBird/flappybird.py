@@ -12,11 +12,13 @@
 # Flappy Bird Using Python 3 and the Turtle Module
 
 import turtle
+import time
 
 wn = turtle.Screen()
 wn.title("Flappy Bird by @TokyoEdTech")
 wn.bgcolor("blue")
 wn.setup(width=500, height=800)
+wn.tracer(0)
 
 player = turtle.Turtle()
 player.speed(0)
@@ -28,10 +30,26 @@ player.goto(-200, 0)
 player.dx = 0
 player.dy = 1
 
+gravity = -0.2
 
+# Define function / method
+def go_up():
+    player.dy += 9
+
+# Keyboard binding
+wn.listen()
+wn.onkeypress(go_up, "space")
 
 # Main Game Loop
 while True:
+    # Pause
+    time.sleep(0.02)
+    # Update the screen
+    wn.update()
+    
+    # Add gravity
+    player.dy += gravity
+    
     # Move player
     y = player.ycor()
     y += player.dy
