@@ -30,6 +30,26 @@ player.goto(-200, 0)
 player.dx = 0
 player.dy = 1
 
+pipe1_top = turtle.Turtle()
+pipe1_top.speed(0)
+pipe1_top.penup()
+pipe1_top.color("green")
+pipe1_top.shape("square")
+pipe1_top.shapesize(stretch_wid=18, stretch_len=3, outline=None)
+pipe1_top.goto(0, 250)
+pipe1_top.dx = -2
+pipe1_top.dy = 0
+
+pipe1_bottom = turtle.Turtle()
+pipe1_bottom.speed(0)
+pipe1_bottom.penup()
+pipe1_bottom.color("green")
+pipe1_bottom.shape("square")
+pipe1_bottom.shapesize(stretch_wid=18, stretch_len=3, outline=None)
+pipe1_bottom.goto(0, -250)
+pipe1_bottom.dx = -2
+pipe1_bottom.dy = 0
+
 gravity = -0.2
 
 # Define function / method
@@ -55,7 +75,14 @@ while True:
     y += player.dy
     player.sety(y)
 
+    # Move the pipes
+    x = pipe1_top.xcor()
+    x += pipe1_top.dx
+    pipe1_top.setx(x) 
     
+    x = pipe1_bottom.xcor()
+    x += pipe1_bottom.dx
+    pipe1_bottom.setx(x) 
 
 
 wn.mainloop()
