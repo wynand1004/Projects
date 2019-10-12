@@ -17,8 +17,17 @@ import time
 wn = turtle.Screen()
 wn.title("Flappy Bird by @TokyoEdTech")
 wn.bgcolor("blue")
+wn.bgpic("background.gif")
 wn.setup(width=500, height=800)
 wn.tracer(0)
+
+pen = turtle.Turtle()
+pen.speed(0)
+pen.hideturtle()
+pen.penup()
+pen.color("white")
+pen.goto(0, 250)
+pen.write("0", move=False, align="left", font=("Arial", 32, "normal"))
 
 player = turtle.Turtle()
 player.speed(0)
@@ -87,7 +96,6 @@ wn.onkeypress(go_up, "space")
 
 # Initialize game variables
 player.score = 0
-print("Score: {}".format(player.score))
 
 # Main Game Loop
 while True:
@@ -143,24 +151,56 @@ while True:
     # Pipe 1
     if (player.xcor() + 10 > pipe1_top.xcor() - 30) and (player.xcor() - 10 < pipe1_top.xcor() + 30):
         if (player.ycor() + 10 > pipe1_top.ycor() - 180) or (player.ycor() - 10 < pipe1_bottom.ycor() + 180):
-            print("COLLISION")
-    
+            pen.clear()
+            pen.write("Game Over", move=False, align="center", font=("Arial", 16, "normal"))
+            wn.update()
+            time.sleep(3)
+            # Reset score
+            player.score = 0
+            # Move Pipes Back
+            pipe1_top.setx(300)
+            pipe1_bottom.setx(300)
+            pipe1_top.setx(600)
+            pipe1_bottom.setx(600)
+            # Move Player back
+            player.goto(-200, 0)
+            player.dy = 0
+            
     # Check for score        
     if pipe1_top.xcor() + 30 < player.xcor() - 10:
         player.score += pipe1_top.value
         pipe1_top.value = 0
-        print("Score: {}".format(player.score))
+        pen.clear()
+        pen.write(player.score, move=False, align="center", font=("Arial", 32, "normal"))
 
     # Check for collisions with pipes
     # Pipe 2
     if (player.xcor() + 10 > pipe2_top.xcor() - 30) and (player.xcor() - 10 < pipe2_top.xcor() + 30):
         if (player.ycor() + 10 > pipe2_top.ycor() - 180) or (player.ycor() - 30 < pipe2_bottom.ycor() + 180):
-            print("COLLISION")
+            pen.clear()
+            pen.write("Game Over", move=False, align="left", font=("Arial", 16, "normal"))
+            wn.update()
+            time.sleep(3)
+            # Reset score
+            player.score = 0
+            # Move Pipes Back
+            pipe2_top.setx(300)
+            pipe2_bottom.setx(300)
+            pipe2_top.setx(600)
+            pipe2_bottom.setx(600)
+            # Move Player back
+            player.goto(-200, 0)
+            player.dy = 0
+            # Clear the pen
+            pen.clear()
+            
 
     # Check for score        
     if pipe2_top.xcor() + 30 < player.xcor() - 10:
         player.score += pipe2_top.value
         pipe2_top.value = 0
-        print("Score: {}".format(player.score))
+        pen.clear()
+        pen.write(player.score, move=False, align="left", font=("Arial", 32, "normal"))
 
 wn.mainloop()
+
