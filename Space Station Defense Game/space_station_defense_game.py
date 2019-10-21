@@ -13,6 +13,7 @@
 
 import turtle
 import math
+import random
 
 wn = turtle.Screen()
 wn.setup(width=800, height=800)
@@ -32,22 +33,57 @@ class Sprite(turtle.Turtle):
         self.speed(0)
         self.penup()
         
+        
+def get_heading_to(t1, t2):
+    x1 = t1.xcor()
+    y1 = t1.ycor()
+    
+    x2 = t2.xcor()
+    y2 = t2.ycor()
+    
+    heading = math.atan2(y1 - y2, x1 - x2)
+    heading = heading * 180.0 / 3.14159
+    
+    return heading
+    
 player = Sprite()
 player.color("white")
 player.shape("player")
+player.score = 0
 
 missile = Sprite()
 missile.color("red")
 missile.shape("arrow")
-missile.speed = 0.2
+missile.speed = 0.4
 missile.state = "ready"
 missile.hideturtle()
 
+pen = Sprite()
+pen.color("white")
+pen.hideturtle()
+pen.goto(0, 350)
+pen.write("Score: 0", False, align = "center", font = ("Arial", 24, "normal"))
+
+asteroids = []
+
+for _ in range(5):   
+    asteroid = Sprite()
+    asteroid.color("brown")
+    asteroid.shape("circle")
+    asteroid.speed = random.randint(2, 10) / 100
+    asteroid.goto(0, 0)
+    heading = random.randint(0, 360)
+    distance = random.randint(400, 600)
+    asteroid.setheading(heading)
+    asteroid.fd(distance)
+    asteroid.setheading(get_heading_to(player, asteroid))
+    asteroids.append(asteroid)
+    
 def rotate_left():
-    player.lt(30)
+    player.lt(10)
     
 def rotate_right():
-    player.rt(30)
+    player.rt(10)
     
 def fire_missile():
     if missile.state == "ready":
@@ -55,7 +91,7 @@ def fire_missile():
         missile.showturtle()
         missile.setheading(player.heading())
         missile.state = "fire"
-    
+
 # Keyboard binding
 wn.listen()
 wn.onkey(rotate_left, "Left")
@@ -77,6 +113,44 @@ while True:
         missile.hideturtle()
         missile.state = "ready"
 
+    # Iterate through asteroids
+    for asteroid in asteroids:    
+        # Move the asteroid
+        asteroid.fd(asteroid.speed)
+        
+        # Check for collisions
+        # Asteroid and Missile
+        if asteroid.distance(missile) < 20:
+            # Reset Asteroid
+            heading = random.randint(0, 360)
+            distance = random.randint(800, 1000)
+            asteroid.setheading(heading)
+            asteroid.fd(distance)
+            asteroid.setheading(get_heading_to(player, asteroid))
+            asteroid.speed += 0.01
+            
+            # Reset Missile
+            missile.goto(1000, 1000)
+            missile.hideturtle()
+            missile.state = "ready"
+            
+            # Increase score
+            player.score += 10
+            pen.clear()
+            pen.write("Score: {}".format(player.score), False, align = "center", font = ("Arial", 24, "normal"))
 
+        # Asteroid and Player
+        if asteroid.distance(player) < 20:
+            # Reset Asteroid
+            heading = random.randint(0, 360)
+            distance = random.randint(800, 1000)
+            asteroid.setheading(heading)
+            asteroid.fd(distance)
+            asteroid.setheading(get_heading_to(player, asteroid))
+            asteroid.speed += 0.01
+            print("Player killed!")
+            player.score -= 50
+            pen.clear()
+            pen.write("Score: {}".format(player.score), False, align = "center", font = ("Arial", 24, "normal"))
 
 wn.mainloop()
