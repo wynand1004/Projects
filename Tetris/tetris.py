@@ -11,6 +11,7 @@
 
 import turtle
 import time
+import random
 
 wn = turtle.Screen()
 wn.title("TETRIS by @TokyoEdTech")
@@ -24,7 +25,7 @@ class Shape():
     def __init__(self):
         self.x = 5
         self.y = 0
-        self.color = 4
+        self.color = random.randint(1, 7)
         
     def move_left(self, grid):
         if self.x > 0:
@@ -58,15 +59,14 @@ grid = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 2, 2, 2, 4, 5, 6, 7, 4, 3, 2, 0],
+    [1, 2, 2, 2, 4, 5, 6, 7, 4, 3, 2, 0],
+    [1, 2, 2, 2, 4, 5, 6, 7, 4, 3, 2, 0],
+    [1, 2, 2, 2, 4, 5, 6, 7, 4, 3, 2, 0],
     [0, 1, 2, 3, 0, 0, 0, 7, 1, 2, 3, 4]
 ]
 
-print(len(grid))
-
+# Create the drawing pen
 pen = turtle.Turtle()
 pen.penup()
 pen.speed(0)
@@ -91,6 +91,30 @@ def draw_grid(pen, grid):
             pen.stamp()
 
 
+def check_grid(grid):
+    # Check if each row is full
+    y = 23
+    while y > 0:
+        is_full = True
+        for x in range(0, 12):
+            if grid[y][x] == 0:
+                is_full = False
+                y -= 1
+                break
+        if is_full:
+            global score
+            score += 10
+            draw_score(pen, score)
+            for copy_y in range(y, 0, -1):
+                for copy_x in range(0, 12):
+                    grid[copy_y][copy_x] = grid[copy_y-1][copy_x]
+
+def draw_score(pen, score):
+    pen.hideturtle()
+    pen.goto(-75, 350)
+    pen.write("Score: {}".format(score), move=False, align="left", font=("Arial", 24, "normal"))
+    pen.showturtle()
+
 # Create the basic shape for the start of the game
 shape = Shape()
 
@@ -98,12 +122,17 @@ shape = Shape()
 grid[shape.y][shape.x] = shape.color
 
 # Draw the initial grid
-draw_grid(pen, grid)
+# draw_grid(pen, grid)
 
 
 wn.listen()
 wn.onkeypress(lambda: shape.move_left(grid), "a")
 wn.onkeypress(lambda: shape.move_right(grid), "d")
+
+# Set the score to 0
+score = 0
+
+draw_score(pen, score)
 
 # Main game loop
 while True:
@@ -113,19 +142,19 @@ while True:
     # Open Row
     if shape.y == 23:
         shape = Shape()
+        check_grid(grid)
     elif grid[shape.y + 1][shape.x] == 0:
         grid[shape.y][shape.x] = 0
         shape.y +=1
         grid[shape.y][shape.x] = shape.color
     else:
         shape = Shape()
+        check_grid(grid)
         
-    # Check if bottom row is full
-    y = 23
-    
-    
-        
+    # Draw the screen
+    draw_score(pen, score)
     draw_grid(pen, grid)
+    
     
     time.sleep(delay)
     
