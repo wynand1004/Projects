@@ -2,7 +2,7 @@
 # Twitter: @tokyoedtech
 
 # Welcome to my live coding session
-# Topic: TETRIS Part 2
+# Topic: TETRIS Part 3
 
 # OS: Ubuntu Linux 19.04
 # Programming Editor: Geany
@@ -15,11 +15,11 @@ import random
 
 wn = turtle.Screen()
 wn.title("TETRIS by @TokyoEdTech")
-wn.bgcolor("black")
+wn.bgcolor("NavajoWhite2")
 wn.setup(width=600, height=800)
 wn.tracer(0)
 
-delay = 0.05
+delay = 0.1
 
 class Shape():
     def __init__(self):
@@ -40,7 +40,7 @@ class Shape():
 
         left_l = [[1,0,0,0],
                   [1,1,1,1]]
-                  
+                   
         right_l = [[0,0,0,1],
                    [1,1,1,1]]
                    
@@ -95,9 +95,24 @@ class Shape():
             if(self.shape[self.height-1][x] == 1):
                 if(grid[self.y + self.height][self.x + x] != 0):
                     result = False
-            
         return result
-       
+    
+    def rotate(self, grid):
+        # First erase_shape
+        self.erase_shape(grid)
+        rotated_shape = []
+        for x in range(len(self.shape[0])):
+            new_row = []
+            for y in range(len(self.shape)-1, -1, -1):
+                new_row.append(self.shape[y][x])
+            rotated_shape.append(new_row)
+        
+        right_side = self.x + len(rotated_shape[0])
+        if right_side < len(grid[0]):     
+            self.shape = rotated_shape
+            # Update the height and width
+            self.height = len(self.shape)
+            self.width = len(self.shape[0])
          
 grid = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -123,7 +138,7 @@ grid = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 2, 3, 0, 0, 0, 7, 1, 2, 3, 4]
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ]
 
 # Create the drawing pen
@@ -170,10 +185,11 @@ def check_grid(grid):
                     grid[copy_y][copy_x] = grid[copy_y-1][copy_x]
 
 def draw_score(pen, score):
+    pen.color("blue")
     pen.hideturtle()
     pen.goto(-75, 350)
     pen.write("Score: {}".format(score), move=False, align="left", font=("Arial", 24, "normal"))
-    pen.showturtle()
+    
 
 # Create the basic shape for the start of the game
 shape = Shape()
@@ -188,6 +204,7 @@ grid[shape.y][shape.x] = shape.color
 wn.listen()
 wn.onkeypress(lambda: shape.move_left(grid), "a")
 wn.onkeypress(lambda: shape.move_right(grid), "d")
+wn.onkeypress(lambda: shape.rotate(grid), "space")
 
 # Set the score to 0
 score = 0
@@ -220,9 +237,8 @@ while True:
         check_grid(grid)
         
     # Draw the screen
-    draw_score(pen, score)
     draw_grid(pen, grid)
-    
+    draw_score(pen, score)
     
     time.sleep(delay)
     
