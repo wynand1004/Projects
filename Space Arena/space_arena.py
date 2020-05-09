@@ -3,12 +3,13 @@
 import turtle
 import math
 import random
+import time
 
 SCREEN_WIDTH = 800  
 SCREEN_HEIGHT = 600
 
 wn = turtle.Screen()
-wn.setup(width = 800, height = 600)
+wn.setup(width = SCREEN_WIDTH, height = SCREEN_HEIGHT)
 wn.title("Space Arena! by #TokyoEdTech")
 wn.bgcolor("black")
 wn.tracer(0)
@@ -21,13 +22,27 @@ pen.penup()
 pen.hideturtle()
 
 # Splash screen
+pen.goto(0, 200)
+pen.write("SPACE ARENA!", align="center", font=("Courier", 30, "normal"))
+pen.goto(0, 150)
+pen.write("Kill the red enemies with your missiles. You have 3 to begin with.", align="center", font=("Courier", 20, "normal"))
+pen.goto(0, 100)
+pen.write("Collect the blue powerups to increase the number, power,", align="center", font=("Courier", 20, "normal"))
+pen.goto(0, 50)
+pen.write("speed, and range of your missiles.", align="center", font=("Courier", 20, "normal"))
+
 wn.update()
+time.sleep(3)
 
 class World():
     def __init__(self, width, height):
         self.width = width
         self.height = height
         
+    def render_info(self, pen, score, active_enemies):
+        pen.goto(0, 280)
+        pen.write(f"Score: {score} Enemies Remaining: {active_enemies}", align="center", font=("Courier", 18, "normal"))
+    
     def render_border(self, pen, x_offset, y_offset):
         pen.color("white")
         pen.width(5)
@@ -40,7 +55,6 @@ class World():
         pen.goto(-self.width/2.0 - x_offset, self.height/2.0 - y_offset)
         pen.penup()
 
-        
 class Sprite():
     
     @staticmethod
@@ -112,6 +126,8 @@ class Player(Sprite):
     def __init__(self):
         Sprite.__init__(self, 0, 0, "triangle")
         self.da = 0
+        self.heading = 90
+        self.score = 0
         
     def rotate_left(self):
         self.da = 10
@@ -136,11 +152,18 @@ class Player(Sprite):
                 missile.dx = player.dx
                 missile.dy = player.dy
                 missile.heading = player.heading
-                missile.dx = math.cos(math.radians(self.heading)) * missile.thrust
-                missile.dy = math.sin(math.radians(self.heading)) * missile.thrust
+                missile.dx += math.cos(math.radians(self.heading)) * missile.thrust
+                missile.dy += math.sin(math.radians(self.heading)) * missile.thrust
                 missile.state = "active"
                 break
 
+    def reset(self):
+        self.x = 0
+        self.y = 0
+        self.dx = 0
+        self.dy = 0
+        self.heading = 90
+        
     def render(self, pen, x_offset, y_offset):
         pen.shapesize(stretch_wid=0.5, stretch_len=1, outline=None) 
         pen.goto(self.x - x_offset, self.y - y_offset)
@@ -157,9 +180,9 @@ class Missile(Sprite):
     def __init__(self, x, y, shape = "triangle", color = "yellow"):
         Sprite.__init__(self, x, y, shape, color)
         self.state = "ready"
-        self.thrust = 5
-        self.max_fuel = 300
-        self.fuel = 300
+        self.thrust = 3
+        self.max_fuel = 200
+        self.fuel = 200
 
     def update(self):        
         self.heading += self.da
@@ -178,14 +201,22 @@ class Missile(Sprite):
     def border_check(self):
         if self.x > world.width / 2.0 - 10:
             self.state = "ready"
+            self.fuel = self.max_fuel
         elif self.x < -world.width / 2.0 + 10:
             self.state = "ready"
+            self.fuel = self.max_fuel
             
         if self.y > world.height / 2.0 - 10:
             self.state = "ready"
+            self.fuel = self.max_fuel
+            
         elif self.y < -world.height / 2.0 + 10:
-
             self.state = "ready"
+            self.fuel = self.max_fuel
+            
+    def reset(self):
+        self.state = "ready"
+        self.fuel = self.max_fuel
 
     def render(self, pen, x_offset, y_offset):
         if self.state == "active":
@@ -210,6 +241,10 @@ class Star(Sprite):
             pen.color(self.color)
             pen.setheading(self.heading)
             pen.stamp()
+
+class Powerup(Sprite):
+    def __init__(self, x, y, shape = "circle", color = "blue"):
+        Sprite.__init__(self, x, y, shape, color)
                           
 # Set up the game
 world = World(1600, 1200)
@@ -218,7 +253,7 @@ world = World(1600, 1200)
 player = Player()
 
 missiles = []
-for _ in range(10):
+for _ in range(3):
     missiles.append(Missile(0, 0))
 
 # Create enemies
@@ -242,11 +277,20 @@ for _ in range(50):
     y = random.randint(-world.height/2.0, world.height/2.0)
     stars.append(Star(x, y))
 
+powerups = []
+for _ in range(5):
+    x = random.randint(-world.width/2.0, world.width/2.0)
+    y = random.randint(-world.height/2.0, world.height/2.0)
+    powerups.append(Powerup(x, y))
+
 # Create sprites list
 sprites = []
 
 for star in stars:
     sprites.append(star)
+    
+for powerup in powerups:
+    sprites.append(powerup)
 
 for missile in missiles:
     sprites.append(missile)
@@ -270,27 +314,51 @@ wn.onkeyrelease(player.decelerate, "Up")
 wn.onkeypress(player.fire, "space")
 
 while True:
+        
     # Move and render the sprites
     for sprite in sprites:
         if sprite.state == "active":
             sprite.update()
             sprite.render(pen, player.x, player.y)
+    
+    active_enemies = 0
         
     # Check for collisions
     for sprite in sprites:
+        # Check if sprite is active
         if sprite.state == "active":
-            # Player collides with enemy
-            if Sprite.is_collision(player, sprite, 18):
-                if isinstance(sprite, Enemy):
-                    print("Player Dies")
-            # Missile collides with enemy
-            for missile in missiles:
-                if missile.state == "active" and isinstance(sprite, Enemy) and Sprite.is_collision(missile, sprite, 13) :
+            # Check if it is an enemy
+            if isinstance(sprite, Enemy):
+                # Count as active
+                active_enemies += 1
+                # Player collides with enemy
+                if Sprite.is_collision(player, sprite, 18):
+                    player.reset()
+                    
+                # Missile collides with enemy
+                for missile in missiles:
+                    if missile.state == "active" and Sprite.is_collision(missile, sprite, 13):
+                        sprite.state = "inactive"
+                        missile.reset()
+                        player.score += 10
+                        
+            # Check if it is a powerup
+            if isinstance(sprite, Powerup):
+                if Sprite.is_collision(player, sprite, 18):
                     sprite.state = "inactive"
-                    missile.state = "ready"
+                    missiles.append(Missile(0, 0))
+                    missiles[-1].max_fuel = missiles[0].max_fuel
+                    missiles[-1].thrust = missiles[0].thrust
+                    sprites.append(missiles[-1])
+                    for missile in missiles:
+                        missile.max_fuel *= 1.1
+                        missile.thrust *= 1.05
     
     # Render the world border
     world.render_border(pen, player.x, player.y)
+    
+    # Render the score and game attributes
+    world.render_info(pen, player.score, active_enemies)
     
     # Update the screen
     wn.update()
