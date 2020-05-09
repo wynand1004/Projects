@@ -128,6 +128,8 @@ class Player(Sprite):
         self.da = 0
         self.heading = 90
         self.score = 0
+        self.max_health = 100
+        self.health = 100
         
     def rotate_left(self):
         self.da = 10
@@ -163,6 +165,7 @@ class Player(Sprite):
         self.dx = 0
         self.dy = 0
         self.heading = 90
+        self.health = self.max_health
         
     def render(self, pen, x_offset, y_offset):
         pen.shapesize(stretch_wid=0.5, stretch_len=1, outline=None) 
@@ -172,9 +175,59 @@ class Player(Sprite):
         pen.setheading(self.heading)
         pen.stamp()
         
+        # Draw health
+        pen.goto(self.x - x_offset - 10, self.y - y_offset + 20)
+        pen.width(2)
+        pen.pendown()
+        pen.setheading(0)
+        try:
+            if self.health/self.max_health < 0.7:
+                pen.color("yellow")
+            elif self.health/self.max_health < 0.3:
+                pen.color("red")
+            else:
+                pen.color("green")
+            pen.fd(20 * (self.health/100))
+            pen.color("grey")
+            pen.fd(20 * ((100-self.health)/100))
+        except:
+            pass
+            
+        pen.penup()
+            
 class Enemy(Sprite):
     def __init__(self, x, y, shape = "square", color = "red"):
         Sprite.__init__(self, x, y, shape, color)
+        self.max_health = 20
+        self.health = 20
+
+    def render(self, pen, x_offset, y_offset):
+        pen.shapesize(stretch_wid=1, stretch_len=1, outline=None) 
+        pen.goto(self.x - x_offset, self.y - y_offset)
+        pen.shape(self.shape)
+        pen.color(self.color)
+        pen.setheading(self.heading)
+        pen.stamp()
+        
+        # Draw health
+        pen.goto(self.x - x_offset - 10, self.y - y_offset + 20)
+        pen.width(2)
+        pen.pendown()
+        pen.setheading(0)
+        try:
+            if self.health/self.max_health < 0.7:
+                pen.color("yellow")
+            elif self.health/self.max_health < 0.3:
+                pen.color("red")
+            else:
+                pen.color("green")
+            pen.fd(20 * (self.health/self.max_health))
+            pen.color("grey")
+            pen.fd(20 * ((self.max_health-self.health)/self.max_health))
+        except:
+            pass
+            
+        pen.penup()
 
 class Missile(Sprite):
     def __init__(self, x, y, shape = "triangle", color = "yellow"):
@@ -183,6 +236,7 @@ class Missile(Sprite):
         self.thrust = 3
         self.max_fuel = 200
         self.fuel = 200
+        self.damage = 10
 
     def update(self):        
         self.heading += self.da
@@ -333,14 +387,19 @@ while True:
                 active_enemies += 1
                 # Player collides with enemy
                 if Sprite.is_collision(player, sprite, 18):
-                    player.reset()
+                    player.health -= random.randint(0, sprite.health)
+                    if player.health <= 0:
+                        player.reset()
                     
                 # Missile collides with enemy
                 for missile in missiles:
                     if missile.state == "active" and Sprite.is_collision(missile, sprite, 13):
-                        sprite.state = "inactive"
+                        sprite.health -= missile.damage
+                        if sprite.health <= 0:
+                            sprite.state = "inactive"
+                            player.score += 10
                         missile.reset()
-                        player.score += 10
+                        
                         
             # Check if it is a powerup
             if isinstance(sprite, Powerup):
@@ -353,6 +412,7 @@ while True:
                     for missile in missiles:
                         missile.max_fuel *= 1.1
                         missile.thrust *= 1.05
+                        missile.damage *= 1.1
     
     # Render the world border
     world.render_border(pen, player.x, player.y)
