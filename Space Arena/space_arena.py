@@ -181,10 +181,10 @@ class Player(Sprite):
         pen.pendown()
         pen.setheading(0)
         try:
-            if self.health/self.max_health < 0.7:
-                pen.color("yellow")
-            elif self.health/self.max_health < 0.3:
+            if self.health/self.max_health < 0.3:
                 pen.color("red")
+            elif self.health/self.max_health < 0.7:
+                pen.color("yellow")
             else:
                 pen.color("green")
             pen.fd(20 * (self.health/100))
@@ -215,10 +215,10 @@ class Enemy(Sprite):
         pen.pendown()
         pen.setheading(0)
         try:
-            if self.health/self.max_health < 0.7:
-                pen.color("yellow")
-            elif self.health/self.max_health < 0.3:
+            if self.health/self.max_health < 0.3:
                 pen.color("red")
+            elif self.health/self.max_health < 0.7:
+                pen.color("yellow")
             else:
                 pen.color("green")
             pen.fd(20 * (self.health/self.max_health))
