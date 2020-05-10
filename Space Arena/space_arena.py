@@ -157,6 +157,9 @@ class Player(Sprite):
                 missile.dx += math.cos(math.radians(self.heading)) * missile.thrust
                 missile.dy += math.sin(math.radians(self.heading)) * missile.thrust
                 missile.state = "active"
+                
+                self.dx -= missile.dx * 0.05
+                self.dy -= missile.dy * 0.05
                 break
 
     def reset(self):
@@ -198,8 +201,80 @@ class Player(Sprite):
 class Enemy(Sprite):
     def __init__(self, x, y, shape = "square", color = "red"):
         Sprite.__init__(self, x, y, shape, color)
-        self.max_health = 20
-        self.health = 20
+        self.max_health = random.randint(10, 30)
+        self.health = self.max_health
+        self.type = random.choice(["hunter", "mine", "surveillance"])
+        self.max_dx = 1
+        self.max_dy = 1
+        self.sensor_range = random.randint(40, 60)
+        
+        if self.type == "hunter":
+            self.color = "red"
+            self.sensor_range = random.randint(200, 400)
+            
+        elif self.type == "mine":
+            self.color = "orange"
+            self.sensor_range = random.randint(100, 200)
+
+        elif self.type == "surveillance":
+            self.color = "pink"
+            self.sensor_range = random.randint(300, 500)
+
+    def update(self):        
+        self.heading += self.da
+        self.heading %= 360
+        
+        self.dx += math.cos(math.radians(self.heading)) * self.thrust
+        self.dy += math.sin(math.radians(self.heading)) * self.thrust
+        
+        self.x += self.dx
+        self.y += self.dy
+        
+        # Change movement based on type
+        if self.type == "hunter":
+            if Sprite.is_collision(player, self, self.sensor_range):
+                if self.x < player.x:
+                    self.dx += 0.01
+                else: 
+                    self.dx -= 0.01
+
+                if self.y < player.y:
+                    self.dy += 0.01
+                else: 
+                    self.dy -= 0.01
+            
+        elif self.type == "mine":
+            self.dx = 0
+            self.dy = 0
+            
+            if Sprite.is_collision(player, self, self.sensor_range):
+                self.type = "hunter"
+                self.color = "red"
+            
+        elif self.type == "surveillance":
+            if Sprite.is_collision(player, self, self.sensor_range):
+                if self.x > player.x:
+                    self.dx += 0.01
+                else: 
+                    self.dx -= 0.01
+
+                if self.y > player.y:
+                    self.dy += 0.01
+                else: 
+                    self.dy -= 0.01
+        
+        # Check max velocity
+        if self.dx > self.max_dx:
+            self.dx = self.max_dx
+        elif self.dx < -self.max_dx:
+            self.dx = -self.max_dx
+            
+        if self.dy > self.max_dy:
+            self.dy = self.max_dy
+        elif self.dy < -self.max_dy:
+            self.dy = -self.max_dy
+        
+        self.border_check()
 
     def render(self, pen, x_offset, y_offset):
         pen.shapesize(stretch_wid=1, stretch_len=1, outline=None) 
@@ -284,7 +359,7 @@ class Missile(Sprite):
 class Star(Sprite):
     def __init__(self, x, y, shape = "circle", color = "yellow"):
         Sprite.__init__(self, x, y, shape, color)
-        self.distance = random.randint(5, 10)
+        self.distance = random.randint(2, 6)
         self.color = random.choice(["white", "yellow", "orange", "red"])
 
     def render(self, pen, x_offset, y_offset):
@@ -299,6 +374,31 @@ class Star(Sprite):
 class Powerup(Sprite):
     def __init__(self, x, y, shape = "circle", color = "blue"):
         Sprite.__init__(self, x, y, shape, color)
+        self.dx = random.randint(-20, 20) / 10
+        self.dy = random.randint(-20, 20) / 10
+
+class Particle(Sprite):
+    def __init__(self, x, y, shape = "triangle", color = "red"):
+        Sprite.__init__(self, x, y, shape, color)
+        self.dx = random.randint(-5, 5)
+        self.dy = random.randint(-5, 5)
+        self.frame = random.randint(10, 20)
+        self.color = random.choice(["red", "orange", "yellow"])
+        self.shape = "triangle"
+        self.state = "inactive"
+        
+    def render(self, pen, x_offset, y_offset):
+        self.frame -= 1
+        self.dx *= 0.85
+        self.dy *= 0.85
+        if self.frame <= 0:
+            self.frame = random.randint(10, 20)
+            self.state = "inactive"
+        pen.shapesize(stretch_wid=0.1, stretch_len=0.1, outline=None) 
+        pen.goto(self.x - x_offset, self.y - y_offset)
+        pen.shape(self.shape)
+        pen.color(self.color)
+        pen.stamp()       
                           
 # Set up the game
 world = World(1600, 1200)
@@ -312,7 +412,7 @@ for _ in range(3):
 
 # Create enemies
 enemies = []
-for _ in range(50):
+for _ in range(30):
     enemies.append(Enemy(0, 0))
     
 for enemy in enemies:
@@ -326,9 +426,9 @@ for enemy in enemies:
     enemy.dy = dy
 
 stars = []    
-for _ in range(50):
-    x = random.randint(-world.width/2.0, world.width/2.0)
-    y = random.randint(-world.height/2.0, world.height/2.0)
+for _ in range(20):
+    x = random.randint(int(-world.width/4.0), int(world.width/4.0))
+    y = random.randint(int(-world.height/4.0), int(world.height/4.0))
     stars.append(Star(x, y))
 
 powerups = []
@@ -337,11 +437,18 @@ for _ in range(5):
     y = random.randint(-world.height/2.0, world.height/2.0)
     powerups.append(Powerup(x, y))
 
+particles = []
+for _ in range(30):
+    particles.append(Particle(0, 0))
+
 # Create sprites list
 sprites = []
 
 for star in stars:
     sprites.append(star)
+    
+for particle in particles:
+    sprites.append(particle)
     
 for powerup in powerups:
     sprites.append(powerup)
@@ -351,7 +458,7 @@ for missile in missiles:
 
 for enemy in enemies:
     sprites.append(enemy)
-    
+
 sprites.append(player)
 
 # Keyboard binding
@@ -393,15 +500,49 @@ while True:
                     
                 # Missile collides with enemy
                 for missile in missiles:
-                    if missile.state == "active" and Sprite.is_collision(missile, sprite, 13):
-                        sprite.health -= missile.damage
-                        if sprite.health <= 0:
+                    if missile.state == "active":
+                        if Sprite.is_collision(missile, sprite, 13):
+                            sprite.health -= missile.damage
+                            sprite.dx += missile.dx / 6.0
+                            sprite.dy += missile.dy / 6.0
+                            if sprite.health <= 0:
+                                sprite.state = "inactive"
+                                player.score += 10
+
+                            for particle in particles:
+                                if random.random() < 0.5 and particle.state == "inactive":
+                                    particle.x = missile.x
+                                    particle.y = missile.y
+                                    particle.dx = random.randint(-5, 5)
+                                    particle.dy = random.randint(-5, 5)
+                                    particle.dx -= missile.dx 
+                                    particle.dy -= missile.dy 
+                                    particle.state = "active"
+                            
+                            missile.reset()
+
+            # Powerup collides with missile
+            if isinstance(sprite, Powerup):
+            # Missile collides with enemy
+                for missile in missiles:
+                    if missile.state == "active":
+                        if Sprite.is_collision(missile, sprite, 13):
                             sprite.state = "inactive"
-                            player.score += 10
-                        missile.reset()
+                            player.score -= 50
+                            
+                            for particle in particles:
+                                if random.random() < 0.3 and particle.state == "inactive":
+                                    particle.x = missile.x
+                                    particle.y = missile.y
+                                    particle.dx = random.randint(-5, 5)
+                                    particle.dy = random.randint(-5, 5)
+                                    particle.dx -= missile.dx 
+                                    particle.dy -= missile.dy 
+                                    particle.state = "active"
+                            
+                            missile.reset()
                         
-                        
-            # Check if it is a powerup
+            # Check if it is a powerup and collides with player
             if isinstance(sprite, Powerup):
                 if Sprite.is_collision(player, sprite, 18):
                     sprite.state = "inactive"
