@@ -49,7 +49,7 @@ class World():
         pen.goto(0, 280)
         pen.write("Score: {} Enemies Remaining: {}".format(score, active_enemies), align="center", font=("Courier", 18, "normal"))
     
-    def render_border(self, pen, x_offset, y_offset):
+    def render_border(self, pen, x_offset = 0, y_offset = 0):
         pen.color("white")
         pen.width(5)
         pen.penup()
@@ -113,7 +113,7 @@ class Sprite():
             self.y = -world.height / 2.0 + 10.0
             self.dy *= -1.0       
         
-    def render(self, pen, x_offset, y_offset):
+    def render(self, pen, x_offset = 0, y_offset = 0):
         # Check if active
         if self.state == "active":
             # Check if it is on the screen
@@ -176,7 +176,7 @@ class Player(Sprite):
         self.heading = 90.0
         self.health = self.max_health
         
-    def render(self, pen, x_offset, y_offset):
+    def render(self, pen, x_offset = 0, y_offset = 0):
         pen.shapesize(stretch_wid=0.5, stretch_len=1, outline=None) 
         pen.goto(self.x - x_offset, self.y - y_offset)
         pen.shape(self.shape)
@@ -210,8 +210,8 @@ class Enemy(Sprite):
         self.max_health = random.randint(10, 30)
         self.health = self.max_health
         self.type = random.choice(["hunter", "mine", "surveillance"])
-        self.max_dx = 1.0
-        self.max_dy = 1.0
+        self.max_dx = 2.0
+        self.max_dy = 2.0
         self.sensor_range = random.randint(40, 60)
         
         if self.type == "hunter":
@@ -317,7 +317,7 @@ class Missile(Sprite):
         self.thrust = 3.0
         self.max_fuel = 200.0
         self.fuel = 200.0
-        self.damage = 10.0
+        self.damage = 5.0
 
     def update(self):        
         self.heading += self.da
@@ -333,21 +333,6 @@ class Missile(Sprite):
             self.state = "ready"
             self.fuel = self.max_fuel
 
-    def border_check(self):
-        if self.x > world.width / 2.0 - 10.0:
-            self.state = "ready"
-            self.fuel = self.max_fuel
-        elif self.x < -world.width / 2.0 + 10.0:
-            self.state = "ready"
-            self.fuel = self.max_fuel
-            
-        if self.y > world.height / 2.0 - 10.0:
-            self.state = "ready"
-            self.fuel = self.max_fuel
-            
-        elif self.y < -world.height / 2.0 + 10.0:
-            self.state = "ready"
-            self.fuel = self.max_fuel
             
     def reset(self):
         self.state = "ready"
@@ -368,7 +353,7 @@ class Star(Sprite):
         self.distance = random.randint(2, 6)
         self.color = random.choice(["white", "yellow", "orange", "red"])
 
-    def render(self, pen, x_offset, y_offset):
+    def render(self, pen, x_offset = 0, y_offset = 0):
         if self.state == "active":
             pen.shapesize(stretch_wid=0.5/self.distance, stretch_len=0.5/self.distance, outline=None) 
             pen.goto(self.x - x_offset/self.distance, self.y - y_offset/self.distance)
@@ -393,19 +378,42 @@ class Particle(Sprite):
         self.shape = "triangle"
         self.state = "inactive"
         
-    def render(self, pen, x_offset, y_offset):
+    def render(self, pen, x_offset = 0, y_offset = 0):
         self.frame -= 1
         self.dx *= 0.85
         self.dy *= 0.85
         if self.frame <= 0:
             self.frame = random.randint(10, 20)
             self.state = "inactive"
-        pen.shapesize(stretch_wid=0.1, stretch_len=0.1, outline=None) 
+        pen.shapesize(stretch_wid=0.05, stretch_len=0.05, outline=None) 
         pen.goto(self.x - x_offset, self.y - y_offset)
         pen.shape(self.shape)
         pen.color(self.color)
         pen.stamp()       
-                          
+
+class Explosion():
+    def __init__(self, number_of_particles):
+        self.particles = []
+        for _ in range(number_of_particles):
+            self.particles.append(Particle(0,0))
+            
+    def explode(self, x, y, dx_offset = 0, dy_offset = 0):
+        for particle in self.particles:
+            if particle.state == "inactive":
+                particle.x = x
+                particle.y = y
+                particle.dx = random.randint(-8, 8)
+                particle.dy = random.randint(-8, 8)
+                particle.dx += dx_offset * 2
+                particle.dy += dy_offset * 2
+                particle.state = "active"
+                
+    def render(self, pen, x_offset = 0, y_offset = 0):
+        for particle in self.particles:
+            if particle.state == "active":
+                particle.update()
+                particle.render(pen, x_offset, y_offset) 
+
 # Set up the game
 world = World(1600, 1200)
 
@@ -443,18 +451,19 @@ for _ in range(5):
     y = random.randint(-world.height/2.0, world.height/2.0)
     powerups.append(Powerup(x, y))
 
-particles = []
-for _ in range(30):
-    particles.append(Particle(0, 0))
+# particles = []
+# for _ in range(30):
+#    particles.append(Particle(0, 0))
+
+explosion = Explosion(30)
 
 # Create sprites list
 sprites = []
 
+background_sprites = []
+
 for star in stars:
-    sprites.append(star)
-    
-for particle in particles:
-    sprites.append(particle)
+    background_sprites.append(star)
     
 for powerup in powerups:
     sprites.append(powerup)
@@ -482,7 +491,14 @@ wn.onkeyrelease(player.decelerate, "Up")
 wn.onkeypress(player.fire, "space")
 
 while True:
-        
+    
+    # Render explosions
+    explosion.render(pen, player.x, player.y)
+    
+    for sprite in background_sprites:
+        sprite.update()
+        sprite.render(pen, player.x, player.y)
+    
     # Move and render the sprites
     for sprite in sprites:
         if sprite.state == "active":
@@ -501,55 +517,43 @@ while True:
                 active_enemies += 1
                 # Player collides with enemy
                 if Sprite.is_collision(player, sprite, 18.0):
-                    for particle in particles:
-                        if random.random() < 0.5 and particle.state == "inactive":
-                            particle.x = (player.x + sprite.x) / 2
-                            particle.y = (player.y + sprite.y) / 2
-                            
-                            particle.dx = random.randint(-5, 5)
-                            particle.dy = random.randint(-5, 5)
-                            
-                            particle.state = "active"
-                            
-                            temp_dx = player.dx
-                            temp_dy = player.dy
-                            
-                            player.dx = sprite.dx
-                            player.dy = sprite.dy
-                            
-                            sprite.dx = temp_dx
-                            sprite.dy = temp_dy
-                            
+                    center_x = (player.x + sprite.x) / 2.0
+                    center_y = (player.y + sprite.y) / 2.0
+                    explosion.explode(center_x, center_y) 
+                    
+                    # Swap momentum for bounce                           
+                    temp_dx = player.dx
+                    temp_dy = player.dy
+                    
+                    player.dx = sprite.dx
+                    player.dy = sprite.dy
+                    
+                    sprite.dx = temp_dx
+                    sprite.dy = temp_dy
+                    
+                    # Check for player death
                     if player.health <= 0:
                         player.reset()
                     else:
                         print(player.health, sprite.health)
-                        if(sprite.health > 0):
-                            player.health -= random.randint(0, sprite.health)
-                            sprite.health -= random.randint(0, player.health)
-                        else:
+                        if sprite.health > 0:
+                            player.health -= random.randint(0, int(sprite.health))
+                            sprite.health -= random.randint(0, int(player.health))
+                        if sprite.health <= 0:
                             sprite.state = "inactive"
-                    
+
                 # Missile collides with enemy
                 for missile in missiles:
                     if missile.state == "active":
                         if Sprite.is_collision(missile, sprite, 13.0):
                             sprite.health -= missile.damage
-                            sprite.dx += missile.dx / 6.0
-                            sprite.dy += missile.dy / 6.0
+                            sprite.dx += missile.dx / 3.0
+                            sprite.dy += missile.dy / 3.0
                             if sprite.health <= 0:
                                 sprite.state = "inactive"
                                 player.score += 10
-
-                            for particle in particles:
-                                if random.random() < 0.5 and particle.state == "inactive":
-                                    particle.x = missile.x
-                                    particle.y = missile.y
-                                    particle.dx = random.randint(-5, 5)
-                                    particle.dy = random.randint(-5, 5)
-                                    particle.dx -= missile.dx 
-                                    particle.dy -= missile.dy 
-                                    particle.state = "active"
+                            
+                            explosion.explode(missile.x, missile.y, -missile.dx, -missile.dy) 
                             
                             missile.reset()
 
@@ -562,15 +566,7 @@ while True:
                             sprite.state = "inactive"
                             player.score -= 50
                             
-                            for particle in particles:
-                                if random.random() < 0.3 and particle.state == "inactive":
-                                    particle.x = missile.x
-                                    particle.y = missile.y
-                                    particle.dx = random.randint(-5, 5)
-                                    particle.dy = random.randint(-5, 5)
-                                    particle.dx -= missile.dx 
-                                    particle.dy -= missile.dy 
-                                    particle.state = "active"
+                            explosion.explode(missile.x, missile.y, -missile.dx, -missile.dy)
                             
                             missile.reset()
                         
