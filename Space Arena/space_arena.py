@@ -134,8 +134,8 @@ class Player(Sprite):
         self.da = 0.0
         self.heading = 90.0
         self.score = 0
-        self.max_health = 100.0
-        self.health = 100.0
+        self.max_health = 100
+        self.health = 100
         
     def rotate_left(self):
         self.da = 10.0
@@ -520,11 +520,15 @@ while True:
                             sprite.dx = temp_dx
                             sprite.dy = temp_dy
                             
-                    player.health -= random.randint(0, sprite.health+1)
-                    sprite.health -= random.randint(0, player.health+15)
-                    sprite.health -= random.randint(0, player.health+1)
                     if player.health <= 0:
                         player.reset()
+                    else:
+                        print(player.health, sprite.health)
+                        if(sprite.health > 0):
+                            player.health -= random.randint(0, sprite.health)
+                            sprite.health -= random.randint(0, player.health)
+                        else:
+                            sprite.state = "inactive"
                     
                 # Missile collides with enemy
                 for missile in missiles:
