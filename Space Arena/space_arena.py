@@ -1,5 +1,5 @@
 # Space Arena!
-# Python 2 & 3 Compatible
+# Python 3.x Compatible
 # Windows, MacOSX, and Linux Compatible
 # by @TokyoEdTech
 # Blog: https://www.christianthompson.com
@@ -47,7 +47,7 @@ class World():
         
     def render_info(self, pen, score, active_enemies):
         pen.goto(0, 280)
-        pen.write(f"Score: {score} Enemies Remaining: {active_enemies}", align="center", font=("Courier", 18, "normal"))
+        pen.write("Score: {} Enemies Remaining: {}".format(score, active_enemies), align="center", font=("Courier", 18, "normal"))
     
     def render_border(self, pen, x_offset, y_offset):
         pen.color("white")
@@ -469,6 +469,7 @@ sprites.append(player)
 
 # Keyboard binding
 wn.listen()
+
 wn.onkeypress(player.rotate_left, "Left")
 wn.onkeyrelease(player.stop_rotation, "Left")
 
