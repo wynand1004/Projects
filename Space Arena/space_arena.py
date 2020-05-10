@@ -494,6 +494,25 @@ while True:
                 active_enemies += 1
                 # Player collides with enemy
                 if Sprite.is_collision(player, sprite, 18):
+                    for particle in particles:
+                        if random.random() < 0.5 and particle.state == "inactive":
+                            particle.x = (player.x + sprite.x) / 2
+                            particle.y = (player.y + sprite.y) / 2
+                            
+                            particle.dx = random.randint(-5, 5)
+                            particle.dy = random.randint(-5, 5)
+                            
+                            particle.state = "active"
+                            
+                            temp_dx = player.dx
+                            temp_dy = player.dy
+                            
+                            player.dx = sprite.dx
+                            player.dy = sprite.dy
+                            
+                            sprite.dx = temp_dx
+                            sprite.dy = temp_dy
+                            
                     player.health -= random.randint(0, sprite.health)
                     if player.health <= 0:
                         player.reset()
