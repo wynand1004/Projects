@@ -26,6 +26,13 @@ pen.color("white")
 pen.penup()
 pen.hideturtle()
 
+radar_pen = turtle.Turtle()
+radar_pen.speed(0)
+radar_pen.shape("square")
+radar_pen.color("white")
+radar_pen.penup()
+radar_pen.hideturtle()
+
 # Splash screen
 pen.goto(0, 200)
 pen.write("SPACE ARENA!", align="center", font=("Courier", 30, "normal"))
@@ -44,6 +51,7 @@ class World():
     def __init__(self, width, height):
         self.width = width
         self.height = height
+        self.frame = 0
         
     def render_info(self, pen, score, active_enemies):
         pen.goto(0, 280)
@@ -136,6 +144,7 @@ class Player(Sprite):
         self.score = 0
         self.max_health = 100
         self.health = 100
+        self.sensor_range = 500
         
     def rotate_left(self):
         self.da = 10.0
@@ -414,8 +423,63 @@ class Explosion():
                 particle.update()
                 particle.render(pen, x_offset, y_offset) 
 
+class Radar():
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.frame = 0
+        
+    def render(self, pen, sprites):
+        # Draw radar border
+        if world.frame % 4 == 0:
+            pen.clear()
+            
+            # Draw radar border
+            pen.color("white")
+            pen.width(2)
+            pen.penup()
+            pen.goto(self.x - self.width/2.0, self.y + self.height/2.0)
+            pen.pendown()
+            pen.goto(self.x + self.width/2.0, self.y + self.height/2.0)
+            pen.goto(self.x + self.width/2.0, self.y -self.height/2.0)
+            pen.goto(self.x - self.width/2.0, self.y -self.height/2.0)
+            pen.goto(self.x - self.width/2.0, self.y + self.height/2.0)
+            pen.penup()
+            self.frame = 0
+            
+            # Draw opaque background
+            pen.goto(self.x, self.y)
+            pen.shape("square")
+            pen.setheading(0)
+            pen.shapesize(stretch_wid=self.width/20, stretch_len=self.height/20, outline=None)
+            pen.color("#111111")
+            pen.stamp()
+            
+            # Draw sprite radar images
+            for sprite in sprites:
+                if sprite.state == "active" and Sprite.is_collision(player, sprite, player.sensor_range):
+                    radar_x = self.x + (sprite.x - player.x) * (self.width / world.width)
+                    radar_y = self.y + (sprite.y - player.y) * (self.height / world.height)
+                    pen.goto(radar_x, radar_y)
+                    pen.color(sprite.color)
+                    pen.shape(sprite.shape)
+                    pen.setheading(sprite.heading)
+                    if isinstance(sprite, Player):
+                        pen.shapesize(stretch_wid=0.1, stretch_len=0.2, outline=None) 
+                    elif isinstance(sprite, Missile):
+                        pen.shapesize(stretch_wid=0.05, stretch_len=0.5, outline=None)
+                    else:
+                        pen.shapesize(stretch_wid=0.2, stretch_len=0.2, outline=None)   
+                    pen.stamp()
+        else:
+            self.frame += 1
+
 # Set up the game
 world = World(1600, 1200)
+
+radar = Radar(287, -187, 200, 200)
 
 # Create the player
 player = Player()
@@ -450,10 +514,6 @@ for _ in range(5):
     x = random.randint(-world.width/2.0, world.width/2.0)
     y = random.randint(-world.height/2.0, world.height/2.0)
     powerups.append(Powerup(x, y))
-
-# particles = []
-# for _ in range(30):
-#    particles.append(Particle(0, 0))
 
 explosion = Explosion(30)
 
@@ -491,6 +551,9 @@ wn.onkeyrelease(player.decelerate, "Up")
 wn.onkeypress(player.fire, "space")
 
 while True:
+    
+    world.frame += 1
+    world.frame %= 30
     
     # Render explosions
     explosion.render(pen, player.x, player.y)
@@ -535,7 +598,6 @@ while True:
                     if player.health <= 0:
                         player.reset()
                     else:
-                        print(player.health, sprite.health)
                         if sprite.health > 0:
                             player.health -= random.randint(0, int(sprite.health))
                             sprite.health -= random.randint(0, int(player.health))
@@ -589,8 +651,12 @@ while True:
     # Render the score and game attributes
     world.render_info(pen, player.score, active_enemies)
     
+    # Render the radar
+    radar.render(radar_pen, sprites)
+    
     # Update the screen
-    wn.update()
+    if world.frame % 2 == 0:
+        wn.update()
     
     # Clear everything
     pen.clear()
