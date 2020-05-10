@@ -14,7 +14,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
 wn = turtle.Screen()
-wn.setup(width = SCREEN_WIDTH, height = SCREEN_HEIGHT)
+wn.setup(width = SCREEN_WIDTH + 200, height = SCREEN_HEIGHT)
 wn.title("Space Arena! by #TokyoEdTech")
 wn.bgcolor("black")
 wn.tracer(0)
@@ -75,6 +75,14 @@ class Sprite():
     def is_collision(sprite1, sprite2, threshold):
         d = math.sqrt((sprite1.x-sprite2.x)**2 + (sprite1.y-sprite2.y)**2)
         if d < threshold:
+            return True
+        else:
+            return False
+    
+    @staticmethod
+    def is_on_screen(sprite, screen_width, screen_height, x_offset, y_offset):
+        if sprite.x + 120 - x_offset + sprite.width / 2 < screen_width / 2 and sprite.x - x_offset - sprite.width / 2 > -screen_width / 2\
+            and sprite.y - y_offset + sprite.height / 2 < screen_height / 2 and sprite.y - y_offset - sprite.height / 2 > - screen_height / 2:    
             return True
         else:
             return False
@@ -142,8 +150,8 @@ class Player(Sprite):
         self.da = 0.0
         self.heading = 90.0
         self.score = 0
-        self.max_health = 100
-        self.health = 100
+        self.max_health = 40
+        self.health = self.max_health
         self.sensor_range = 500
         
     def rotate_left(self):
@@ -195,7 +203,7 @@ class Player(Sprite):
         
         # Draw health
         pen.goto(self.x - x_offset - 10.0, self.y - y_offset + 20.0)
-        pen.width(2.0)
+        pen.width(3.0)
         pen.pendown()
         pen.setheading(0.0)
         try:
@@ -205,9 +213,9 @@ class Player(Sprite):
                 pen.color("yellow")
             else:
                 pen.color("green")
-            pen.fd(20.0 * (self.health/100.0))
+            pen.fd(20.0 * (self.health/self.max_health))
             pen.color("grey")
-            pen.fd(20.0 * ((100.0-self.health)/100.0))
+            pen.fd(20.0 * ((self.max_health-self.health)/self.max_health))
         except:
             pass
             
@@ -235,7 +243,11 @@ class Enemy(Sprite):
             self.color = "pink"
             self.sensor_range = random.randint(300, 500)
 
-    def update(self):        
+    def update(self):
+        
+        if self.health <= 0:
+            self.state = "inactive"
+                    
         self.heading += self.da
         self.heading %= 360.0
         
@@ -292,32 +304,33 @@ class Enemy(Sprite):
         self.border_check()
 
     def render(self, pen, x_offset, y_offset):
-        pen.shapesize(stretch_wid=1, stretch_len=1, outline=None) 
-        pen.goto(self.x - x_offset, self.y - y_offset)
-        pen.shape(self.shape)
-        pen.color(self.color)
-        pen.setheading(self.heading)
-        pen.stamp()
-        
-        # Draw health
-        pen.goto(self.x - x_offset - 10.0, self.y - y_offset + 20.0)
-        pen.width(2)
-        pen.pendown()
-        pen.setheading(0.0)
-        try:
-            if self.health/self.max_health < 0.3:
-                pen.color("red")
-            elif self.health/self.max_health < 0.7:
-                pen.color("yellow")
-            else:
-                pen.color("green")
-            pen.fd(20.0 * (self.health/self.max_health))
-            pen.color("grey")
-            pen.fd(20.0 * ((self.max_health-self.health)/self.max_health))
-        except:
-            pass
+        if self.state == "active":
+            pen.shapesize(stretch_wid=1, stretch_len=1, outline=None) 
+            pen.goto(self.x - x_offset, self.y - y_offset)
+            pen.shape(self.shape)
+            pen.color(self.color)
+            pen.setheading(self.heading)
+            pen.stamp()
             
-        pen.penup()
+            # Draw health
+            pen.goto(self.x - x_offset - 10.0, self.y - y_offset + 20.0)
+            pen.width(2)
+            pen.pendown()
+            pen.setheading(0.0)
+            try:
+                if self.health/self.max_health < 0.3:
+                    pen.color("red")
+                elif self.health/self.max_health < 0.7:
+                    pen.color("yellow")
+                else:
+                    pen.color("green")
+                pen.fd(20.0 * (self.health/self.max_health))
+                pen.color("grey")
+                pen.fd(20.0 * ((self.max_health-self.health)/self.max_health))
+            except:
+                pass
+                
+            pen.penup()
 
 class Missile(Sprite):
     def __init__(self, x, y, shape = "triangle", color = "yellow"):
@@ -361,6 +374,7 @@ class Star(Sprite):
         Sprite.__init__(self, x, y, shape, color)
         self.distance = random.randint(2, 6)
         self.color = random.choice(["white", "yellow", "orange", "red"])
+        self.width = 0.5 / self.distance
 
     def render(self, pen, x_offset = 0, y_offset = 0):
         if self.state == "active":
@@ -438,23 +452,28 @@ class Radar():
             
             # Draw radar border
             pen.color("white")
-            pen.width(2)
+            #pen.width(2)
             pen.penup()
-            pen.goto(self.x - self.width/2.0, self.y + self.height/2.0)
-            pen.pendown()
-            pen.goto(self.x + self.width/2.0, self.y + self.height/2.0)
-            pen.goto(self.x + self.width/2.0, self.y -self.height/2.0)
-            pen.goto(self.x - self.width/2.0, self.y -self.height/2.0)
-            pen.goto(self.x - self.width/2.0, self.y + self.height/2.0)
-            pen.penup()
+            #pen.goto(self.x - self.width/2.0, self.y + self.height/2.0)
+            #pen.pendown()
+            #pen.goto(self.x + self.width/2.0, self.y + self.height/2.0)
+            #pen.goto(self.x + self.width/2.0, self.y -self.height/2.0)
+            #pen.goto(self.x - self.width/2.0, self.y -self.height/2.0)
+            #pen.goto(self.x - self.width/2.0, self.y + self.height/2.0)
+            #pen.penup()
             self.frame = 0
             
             # Draw opaque background
             pen.goto(self.x, self.y)
             pen.shape("square")
             pen.setheading(0)
+            
+            pen.color("white")
             pen.shapesize(stretch_wid=self.width/20, stretch_len=self.height/20, outline=None)
+            pen.stamp()
+            
             pen.color("#111111")
+            pen.shapesize(stretch_wid=self.width/21, stretch_len=self.height/21, outline=None)
             pen.stamp()
             
             # Draw sprite radar images
@@ -479,7 +498,7 @@ class Radar():
 # Set up the game
 world = World(1600, 1200)
 
-radar = Radar(287, -187, 200, 200)
+radar = Radar(387, -187, 200, 200)
 
 # Create the player
 player = Player()
@@ -560,13 +579,15 @@ while True:
     
     for sprite in background_sprites:
         sprite.update()
-        sprite.render(pen, player.x, player.y)
+        if Sprite.is_on_screen(sprite, SCREEN_WIDTH, SCREEN_HEIGHT, player.x, player.y):
+            sprite.render(pen, player.x, player.y)
     
     # Move and render the sprites
     for sprite in sprites:
         if sprite.state == "active":
             sprite.update()
-            sprite.render(pen, player.x, player.y)
+            if Sprite.is_on_screen(sprite, SCREEN_WIDTH, SCREEN_HEIGHT, player.x, player.y):
+                sprite.render(pen, player.x, player.y)
     
     active_enemies = 0
         
@@ -600,6 +621,7 @@ while True:
                     else:
                         if sprite.health > 0:
                             player.health -= random.randint(0, int(sprite.health))
+                        if player.health > 0:
                             sprite.health -= random.randint(0, int(player.health))
                         if sprite.health <= 0:
                             sprite.state = "inactive"
