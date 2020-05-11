@@ -14,7 +14,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
 wn = turtle.Screen()
-wn.setup(width = SCREEN_WIDTH + 200, height = SCREEN_HEIGHT)
+wn.setup(width = SCREEN_WIDTH + 220, height = SCREEN_HEIGHT + 20)
 wn.title("Space Arena! by #TokyoEdTech")
 wn.bgcolor("black")
 wn.tracer(0)
@@ -45,28 +45,55 @@ pen.write("speed, and range of your missiles.", align="center", font=("Courier",
 pen.goto(0, 0)
 pen.write("Use the arrows to rotate and accelerate. Space to fire.", align="center", font=("Courier", 15, "normal"))
 wn.update()
-time.sleep(5)
+time.sleep(0)
 
-class World():
+class Game():
     def __init__(self, width, height):
         self.width = width
         self.height = height
         self.frame = 0
+        self.show_radar = False
+        
+    def toggle_radar(self):
+        self.show_radar = not self.show_radar
         
     def render_info(self, pen, score, active_enemies):
-        pen.goto(0, 280)
-        pen.write("Score: {} Enemies Remaining: {}".format(score, active_enemies), align="center", font=("Courier", 18, "normal"))
-    
-    def render_border(self, pen, x_offset = 0, y_offset = 0):
-        pen.color("white")
-        pen.width(5)
+        pen.color("#222255")
         pen.penup()
-        pen.goto(-self.width/2.0 - x_offset, self.height/2.0 - y_offset)
+        pen.goto(400, 0)
+        pen.shape("square")
+        pen.setheading(90)
+        pen.shapesize(stretch_wid=10, stretch_len=32, outline=None)
+        pen.stamp()
+        
+        pen.color("white")
+        pen.width(3)
+        pen.goto(300, 400)
         pen.pendown()
-        pen.goto(self.width/2.0 - x_offset, self.height/2.0 - y_offset)
-        pen.goto(self.width/2.0 - x_offset, -self.height/2.0 - y_offset)
-        pen.goto(-self.width/2.0 - x_offset, -self.height/2.0 - y_offset)
-        pen.goto(-self.width/2.0 - x_offset, self.height/2.0 - y_offset)
+        pen.goto(300, -400)
+        
+        pen.penup() 
+        pen.color("white")
+        pen.goto(400, 250)
+        pen.write("Score: {}".format(score), align="center", font=("Courier", 18, "normal"))
+        pen.goto(400, 230)
+        pen.write("Enemies: {}".format(active_enemies), align="center", font=("Courier", 18, "normal"))
+    
+    def render_border(self, pen, x_offset, y_offset, screen_width, screen_height):
+        pen.color("white")
+        pen.width(3)
+        pen.penup()
+        left = -self.width/2.0 - x_offset
+        right = self.width/2.0 - x_offset
+        top = self.height/2.0 - y_offset
+        bottom = -self.height/2.0 - y_offset
+        
+        pen.goto(left, top)
+        pen.pendown()
+        pen.goto(right, top)
+        pen.goto(right, bottom)
+        pen.goto(left, bottom)
+        pen.goto(left, top)
         pen.penup()
 
 class Sprite():
@@ -81,8 +108,8 @@ class Sprite():
     
     @staticmethod
     def is_on_screen(sprite, screen_width, screen_height, x_offset, y_offset):
-        if sprite.x + 120 - x_offset + sprite.width / 2 < screen_width / 2 and sprite.x - x_offset - sprite.width / 2 > -screen_width / 2\
-            and sprite.y - y_offset + sprite.height / 2 < screen_height / 2 and sprite.y - y_offset - sprite.height / 2 > - screen_height / 2:    
+        if sprite.x + 120 - x_offset < screen_width / 2 and sprite.x - x_offset > -screen_width / 2\
+            and sprite.y - y_offset < screen_height /2 and sprite.y - y_offset > - screen_height / 2:    
             return True
         else:
             return False
@@ -115,18 +142,18 @@ class Sprite():
         self.border_check()
             
     def border_check(self):
-        if self.x > world.width / 2.0 - 10.0:
-            self.x = world.width / 2.0 - 10.0
+        if self.x > game.width / 2.0 - 10.0:
+            self.x = game.width / 2.0 - 10.0
             self.dx *= -1.0
-        elif self.x < -world.width / 2.0 + 10.0:
-            self.x = -world.width / 2.0 + 10.0
+        elif self.x < -game.width / 2.0 + 10.0:
+            self.x = -game.width / 2.0 + 10.0
             self.dx *= -1.0
             
-        if self.y > world.height / 2.0 - 10.0:
-            self.y = world.height / 2.0 - 10.0
+        if self.y > game.height / 2.0 - 10.0:
+            self.y = game.height / 2.0 - 10.0
             self.dy *= -1.0
-        elif self.y < -world.height / 2.0 + 10.0:
-            self.y = -world.height / 2.0 + 10.0
+        elif self.y < -game.height / 2.0 + 10.0:
+            self.y = -game.height / 2.0 + 10.0
             self.dy *= -1.0       
         
     def render(self, pen, x_offset = 0, y_offset = 0):
@@ -136,7 +163,7 @@ class Sprite():
             screen_x = self.x - x_offset
             screen_y = self.y - y_offset
             
-            if(screen_x > -world.width/2.0 and screen_x < world.width/2.0 and screen_y > -world.height/2.0 and screen_y < world.width/2.0):
+            if(screen_x > -game.width/2.0 and screen_x < game.width/2.0 and screen_y > -game.height/2.0 and screen_y < game.width/2.0):
                 pen.goto(self.x - x_offset, self.y - y_offset)
                 pen.shape(self.shape)
                 pen.color(self.color)
@@ -164,7 +191,7 @@ class Player(Sprite):
         self.da = 0.0
         
     def accelerate(self):
-        self.thrust += 0.1
+        self.thrust += 0.2
         
     def decelerate(self):
         self.thrust = 0.0
@@ -227,13 +254,13 @@ class Enemy(Sprite):
         self.max_health = random.randint(10, 30)
         self.health = self.max_health
         self.type = random.choice(["hunter", "mine", "surveillance"])
-        self.max_dx = 2.0
-        self.max_dy = 2.0
+        self.max_dx = 3.0
+        self.max_dy = 3.0
         self.sensor_range = random.randint(40, 60)
         
         if self.type == "hunter":
             self.color = "red"
-            self.sensor_range = random.randint(200, 400)
+            self.sensor_range = random.randint(100, 200)
             
         elif self.type == "mine":
             self.color = "orange"
@@ -241,7 +268,7 @@ class Enemy(Sprite):
 
         elif self.type == "surveillance":
             self.color = "pink"
-            self.sensor_range = random.randint(300, 500)
+            self.sensor_range = random.randint(200, 400)
 
     def update(self):
         
@@ -261,14 +288,14 @@ class Enemy(Sprite):
         if self.type == "hunter":
             if Sprite.is_collision(player, self, self.sensor_range):
                 if self.x < player.x:
-                    self.dx += 0.01
+                    self.dx += 0.05
                 else: 
-                    self.dx -= 0.01
+                    self.dx -= 0.05
 
                 if self.y < player.y:
-                    self.dy += 0.01
+                    self.dy += 0.05
                 else: 
-                    self.dy -= 0.01
+                    self.dy -= 0.05
             
         elif self.type == "mine":
             self.dx = 0.0
@@ -281,14 +308,14 @@ class Enemy(Sprite):
         elif self.type == "surveillance":
             if Sprite.is_collision(player, self, self.sensor_range):
                 if self.x > player.x:
-                    self.dx += 0.01
+                    self.dx += 0.03
                 else: 
-                    self.dx -= 0.01
+                    self.dx -= 0.03
 
                 if self.y > player.y:
-                    self.dy += 0.01
+                    self.dy += 0.03
                 else: 
-                    self.dy -= 0.01
+                    self.dy -= 0.03
         
         # Check max velocity
         if self.dx > self.max_dx:
@@ -336,7 +363,7 @@ class Missile(Sprite):
     def __init__(self, x, y, shape = "triangle", color = "yellow"):
         Sprite.__init__(self, x, y, shape, color)
         self.state = "ready"
-        self.thrust = 3.0
+        self.thrust = 5.0
         self.max_fuel = 200.0
         self.fuel = 200.0
         self.damage = 5.0
@@ -388,14 +415,14 @@ class Star(Sprite):
 class Powerup(Sprite):
     def __init__(self, x, y, shape = "circle", color = "blue"):
         Sprite.__init__(self, x, y, shape, color)
-        self.dx = random.randint(-20, 20) / 10.0
-        self.dy = random.randint(-20, 20) / 10.0
+        self.dx = random.randint(-30, 30) / 10.0
+        self.dy = random.randint(-30, 30) / 10.0
 
 class Particle(Sprite):
     def __init__(self, x, y, shape = "triangle", color = "red"):
         Sprite.__init__(self, x, y, shape, color)
-        self.dx = random.randint(-5, 5)
-        self.dy = random.randint(-5, 5)
+        self.dx = random.randint(-6, 6)
+        self.dy = random.randint(-6, 6)
         self.frame = random.randint(10, 20)
         self.color = random.choice(["red", "orange", "yellow"])
         self.shape = "triangle"
@@ -425,8 +452,8 @@ class Explosion():
             if particle.state == "inactive":
                 particle.x = x
                 particle.y = y
-                particle.dx = random.randint(-8, 8)
-                particle.dy = random.randint(-8, 8)
+                particle.dx = random.randint(-12, 12)
+                particle.dy = random.randint(-12, 12)
                 particle.dx += dx_offset * 2
                 particle.dy += dy_offset * 2
                 particle.state = "active"
@@ -443,44 +470,30 @@ class Radar():
         self.y = y
         self.width = width
         self.height = height
-        self.frame = 0
         
-    def render(self, pen, sprites):
+    def render(self, pen, sprites, render):         
         # Draw radar border
-        if world.frame % 4 == 0:
-            pen.clear()
-            
-            # Draw radar border
-            pen.color("white")
-            #pen.width(2)
-            pen.penup()
-            #pen.goto(self.x - self.width/2.0, self.y + self.height/2.0)
-            #pen.pendown()
-            #pen.goto(self.x + self.width/2.0, self.y + self.height/2.0)
-            #pen.goto(self.x + self.width/2.0, self.y -self.height/2.0)
-            #pen.goto(self.x - self.width/2.0, self.y -self.height/2.0)
-            #pen.goto(self.x - self.width/2.0, self.y + self.height/2.0)
-            #pen.penup()
-            self.frame = 0
-            
-            # Draw opaque background
-            pen.goto(self.x, self.y)
-            pen.shape("square")
-            pen.setheading(0)
-            
-            pen.color("white")
-            pen.shapesize(stretch_wid=self.width/20, stretch_len=self.height/20, outline=None)
-            pen.stamp()
-            
-            pen.color("#111111")
-            pen.shapesize(stretch_wid=self.width/21, stretch_len=self.height/21, outline=None)
-            pen.stamp()
-            
+        pen.color("white")
+        pen.penup()
+        
+        # Draw opaque background
+        # pen.goto(self.x, self.y)
+        # pen.shape("square")
+        # pen.setheading(0)
+        
+        # pen.color("white")
+        # pen.shapesize(stretch_wid=self.width/20, stretch_len=self.height/20, outline=None)
+        # pen.stamp()
+        
+        # pen.color("#111111")
+        # pen.shapesize(stretch_wid=self.width/21, stretch_len=self.height/21, outline=None)
+        # pen.stamp()
+        if render:
             # Draw sprite radar images
             for sprite in sprites:
                 if sprite.state == "active" and Sprite.is_collision(player, sprite, player.sensor_range):
-                    radar_x = self.x + (sprite.x - player.x) * (self.width / world.width)
-                    radar_y = self.y + (sprite.y - player.y) * (self.height / world.height)
+                    radar_x = self.x + (sprite.x - player.x) * (self.width / game.width)
+                    radar_y = self.y + (sprite.y - player.y) * (self.height / game.height)
                     pen.goto(radar_x, radar_y)
                     pen.color(sprite.color)
                     pen.shape(sprite.shape)
@@ -492,13 +505,22 @@ class Radar():
                     else:
                         pen.shapesize(stretch_wid=0.2, stretch_len=0.2, outline=None)   
                     pen.stamp()
+            pen.setheading(90)
+            pen.goto(self.x + 100, self.y)
+            pen.pendown()
+            pen.circle(100)
+            pen.penup()
         else:
-            self.frame += 1
+            pen.goto(self.x, self.y)
+            pen.write("Radar OFF", align="center", font=("Courier", 15, "normal"))
+            pen.goto(self.x, self.y - 20)
+            pen.write("Press r to Enable", align="center", font=("Courier", 15, "normal"))
+
 
 # Set up the game
-world = World(1600, 1200)
+game = Game(1600, 1200)
 
-radar = Radar(387, -187, 200, 200)
+radar = Radar(400, -200, 200, 200)
 
 # Create the player
 player = Player()
@@ -509,12 +531,12 @@ for _ in range(3):
 
 # Create enemies
 enemies = []
-for _ in range(30):
+for _ in range(10):
     enemies.append(Enemy(0.0, 0.0))
     
 for enemy in enemies:
-    x = random.randint(-world.width/2.0, world.width/2.0)
-    y = random.randint(-world.height/2.0, world.height/2.0)
+    x = random.randint(-game.width/2.0, game.width/2.0)
+    y = random.randint(-game.height/2.0, game.height/2.0)
     dx = random.randint(0, 10) / 20.0
     dy = random.randint(0, 10) / 20.0
     enemy.x = x
@@ -523,15 +545,15 @@ for enemy in enemies:
     enemy.dy = dy
 
 stars = []    
-for _ in range(20):
-    x = random.randint(int(-world.width/4.0), int(world.width/4.0))
-    y = random.randint(int(-world.height/4.0), int(world.height/4.0))
+for _ in range(10):
+    x = random.randint(int(-game.width/4.0), int(game.width/4.0))
+    y = random.randint(int(-game.height/4.0), int(game.height/4.0))
     stars.append(Star(x, y))
 
 powerups = []
 for _ in range(5):
-    x = random.randint(-world.width/2.0, world.width/2.0)
-    y = random.randint(-world.height/2.0, world.height/2.0)
+    x = random.randint(-game.width/2.0, game.width/2.0)
+    y = random.randint(-game.height/2.0, game.height/2.0)
     powerups.append(Powerup(x, y))
 
 explosion = Explosion(30)
@@ -569,10 +591,19 @@ wn.onkeyrelease(player.decelerate, "Up")
 
 wn.onkeypress(player.fire, "space")
 
-while True:
+# Game settings
+wn.onkeypress(game.toggle_radar, "r")
+
+def timer(game=game):
+    print(game.frame)
+    game.frame = 0
+    turtle.ontimer(timer, 1000)
     
-    world.frame += 1
-    world.frame %= 30
+
+turtle.ontimer(timer, 1000)
+
+while True:
+    game.frame += 1
     
     # Render explosions
     explosion.render(pen, player.x, player.y)
@@ -580,14 +611,14 @@ while True:
     for sprite in background_sprites:
         sprite.update()
         if Sprite.is_on_screen(sprite, SCREEN_WIDTH, SCREEN_HEIGHT, player.x, player.y):
-            sprite.render(pen, player.x, player.y)
+            sprite.render(pen, player.x+100, player.y)
     
     # Move and render the sprites
     for sprite in sprites:
         if sprite.state == "active":
             sprite.update()
             if Sprite.is_on_screen(sprite, SCREEN_WIDTH, SCREEN_HEIGHT, player.x, player.y):
-                sprite.render(pen, player.x, player.y)
+                sprite.render(pen, player.x+100, player.y)
     
     active_enemies = 0
         
@@ -603,7 +634,7 @@ while True:
                 if Sprite.is_collision(player, sprite, 18.0):
                     center_x = (player.x + sprite.x) / 2.0
                     center_y = (player.y + sprite.y) / 2.0
-                    explosion.explode(center_x, center_y) 
+                    explosion.explode(center_x-100, center_y) 
                     
                     # Swap momentum for bounce                           
                     temp_dx = player.dx
@@ -637,7 +668,7 @@ while True:
                                 sprite.state = "inactive"
                                 player.score += 10
                             
-                            explosion.explode(missile.x, missile.y, -missile.dx, -missile.dy) 
+                            explosion.explode(missile.x-100, missile.y, -missile.dx, -missile.dy) 
                             
                             missile.reset()
 
@@ -650,7 +681,7 @@ while True:
                             sprite.state = "inactive"
                             player.score -= 50
                             
-                            explosion.explode(missile.x, missile.y, -missile.dx, -missile.dy)
+                            explosion.explode(missile.x-100, missile.y, -missile.dx, -missile.dy)
                             
                             missile.reset()
                         
@@ -667,18 +698,17 @@ while True:
                         missile.thrust *= 1.05
                         missile.damage *= 1.1
     
-    # Render the world border
-    world.render_border(pen, player.x, player.y)
+    # Render the game border
+    game.render_border(pen, player.x+100, player.y, SCREEN_WIDTH, SCREEN_HEIGHT)
     
     # Render the score and game attributes
-    world.render_info(pen, player.score, active_enemies)
+    game.render_info(pen, player.score, active_enemies)
     
     # Render the radar
-    radar.render(radar_pen, sprites)
+    radar.render(pen, sprites, game.show_radar)
     
     # Update the screen
-    if world.frame % 2 == 0:
-        wn.update()
+    wn.update()
     
     # Clear everything
     pen.clear()
