@@ -18,7 +18,7 @@ wn = turtle.Screen()
 wn.setup(width = SCREEN_WIDTH + 220, height = SCREEN_HEIGHT + 20)
 wn.title("Space Arena! by #TokyoEdTech")
 wn.bgcolor("black")
-wn.tracer(0)
+
 
 pen = turtle.Turtle()
 pen.speed(0)
@@ -27,33 +27,98 @@ pen.color("white")
 pen.penup()
 pen.hideturtle()
 
-radar_pen = turtle.Turtle()
-radar_pen.speed(0)
-radar_pen.shape("square")
-radar_pen.color("white")
-radar_pen.penup()
-radar_pen.hideturtle()
+class CharacterPen:
+    def __init__(self, color = "white", scale = 1.0):
+        self.color = color
+        self.scale = scale
+
+        self.characters = {}
+        self.characters["1"] = ((-5, 10),(0, 10),(0, -10),(-5, -10), (5, -10))
+        self.characters["2"] = ((-5, 10),(5, 10),(5, 0), (-5, 0), (-5, -10), (5, -10))
+        self.characters["3"] = ((-5, 10),(5, 10),(5, 0), (0, 0), (5, 0), (5,-10), (-5, -10))
+        self.characters["4"] = ((-5, 10), (-5, 0), (5, 0), (2,0), (2, 5), (2, -10))
+        self.characters["5"] = ((5, 10), (-5, 10), (-5, 0), (5,0), (5,-10), (-5, -10))
+        self.characters["6"] = ((5, 10), (-5, 10), (-5, -10), (5, -10), (5, 0), (-5, 0))
+        self.characters["7"] = ((-5, 10), (5, 10), (0, -10))
+        self.characters["8"] = ((-5, 0), (5, 0), (5, 10), (-5, 10), (-5, -10), (5, -10), (5, 0))
+        self.characters["9"] = ((5, -10), (5, 10), (-5, 10), (-5, 0), (5, 0))
+        self.characters["0"] = ((-5, 10), (5, 10), (5, -10), (-5, -10), (-5, 10))
+        
+        self.characters["S"] = ((5, 10), (-5, 10), (-5, 0), (5, 0), (5, -10), (-5, -10))
+        self.characters["C"] = ((5, 10), (-5, 10), (-5, -10), (5, -10))
+        self.characters["O"] = ((-5, 10), (5, 10), (5, -10), (-5, -10), (-5, 10))
+        self.characters["R"] = ((-5, -10), (-5, 10), (5, 10), (5, 0), (-5, 0), (5, -10))
+        self.characters["E"] = ((5, 10), (-5, 10), (-5, 0), (0, 0), (-5, 0), (-5, -10), (5, -10))
+        
+        self.characters["G"] = ((5, 10), (-5, 10), (-5, -10), (5, -10), (5, 0), (0, 0))
+        self.characters["A"] = ((-5, -10), (-5, 10), (5, 10), (5, -10), (5, 0), (-5, 0))
+        self.characters["M"] = ((-5, -10), (-3, 10), (0, 0), (3, 10), (5, -10))
+            
+        self.characters["V"] = ((-5, 10), (0, -10), (5, 10))
+        
+        self.characters["L"] = ((-5, 10), (-5, -10), (5, -10))
+        self.characters["I"] = ((-5, 10), (5, 10), (0, 10), (0, -10), (-5, -10), (5, -10))
+        
+        self.characters["F"] = ((5, 10), (-5, 10), (-5, 0), (5, 0), (-5, 0), (-5, -10))     
+        self.characters["U"] = ((-5, 10), (-5, -10), (5, -10), (5, 10))
+        
+        self.characters["H"] = ((-5, 10), (-5, -10), (-5, 0), (5, 0), (5, 10), (5, -10))       
+        self.characters["D"] = ((-5, 10), (-5, -10), (5, -8), (5, 8), (-5, 10))  
+        
+        self.characters["P"] = ((-5, -10), (-5, 10), (5, 10), (5, 0), (-5, 0)) 
+        self.characters["N"] = ((-5, -10), (-5, 10), (5, -10), (5, 10))   
+        
+        self.characters["N"] = ((-5, -10), (-5, 10), (5, -10), (5, 10))   
+        
+        self.characters["B"] = ((-5, -10), (-5, 10), (3, 10), (3, 0), (-5, 0), (5,0), (5, -10), (-5, -10))   
+        self.characters["J"] = ((5, 10), (5, -10), (-5, -10), (-5, 0))   
+        self.characters["K"] = ((-5, 10), (-5, -10), (-5, 0), (5, 10), (-5, 0), (5, -10))   
+        self.characters["Q"] = ((5, -10), (-5, -10), (-5, 10), (5, 10), (5, -10), (2, -7), (6, -11))   
+        self.characters["T"] = ((-5, 10), (5, 10), (0, 10), (0, -10))   
+        self.characters["W"] = ((-5, 10), (-3, -10), (0, 0), (3, -10), (5, 10))   
+        self.characters["X"] = ((-5, 10), (5, -10), (0, 0), (-5, -10), (5, 10))   
+        self.characters["Y"] = ((-5, 10), (0, 0), (5, 10), (0,0), (0, -10))   
+        self.characters["Z"] = ((-5, 10), (5, 10), (-5, -10), (5, -10))   
+        
+        self.characters["-"] = ((-3, 0), (3, 0))  
+           
+        
+    def draw_string(self, pen, str, x, y):
+        pen.width(2)
+        pen.color(self.color)
+        for character in str.upper():
+            self.draw_character(pen, character, x, y)
+            x += 15 * self.scale
+
+    def draw_character(self, pen, character, x, y):
+        
+        character = character.upper()
+        
+        if character in self.characters:
+            pen.penup()
+            xy = self.characters[character][0]
+            pen.goto(x + xy[0] * self.scale, y + xy[1] * self.scale)
+            pen.pendown()
+            for i in range(1, len(self.characters[character])):
+                xy = self.characters[character][i]
+                pen.goto(x + xy[0] * self.scale, y + xy[1] * self.scale)
+            pen.penup()
 
 # Splash screen
-pen.goto(0, 200)
-pen.write("SPACE ARENA!", align="center", font=("Courier", 30, "normal"))
-pen.goto(0, 150)
-pen.write("Kill the red enemies with your missiles. You have 3 to begin with.", align="center", font=("Courier", 15, "normal"))
-pen.goto(0, 100)
-pen.write("Collect the blue powerups to increase the number, power,", align="center", font=("Courier", 15, "normal"))
-pen.goto(0, 50)
-pen.write("speed, and range of your missiles.", align="center", font=("Courier", 15, "normal"))
-pen.goto(0, 0)
-pen.write("Use the arrows to rotate and accelerate. Space to fire.", align="center", font=("Courier", 15, "normal"))
+character_pen = CharacterPen("red", 3.0)
+character_pen.draw_string(pen, "SPACE ARENA", -220, -0)
+
+wn.tracer(0)
 wn.update()
-time.sleep(0)
+
+time.sleep(5)
 
 class Game():
     def __init__(self, width, height):
         self.width = width
         self.height = height
         self.frame = 0
-        self.show_radar = False
+        self.level = 1
         
     def toggle_radar(self):
         self.show_radar = not self.show_radar
@@ -76,10 +141,14 @@ class Game():
         pen.penup() 
         pen.color("white")
         pen.goto(400, 250)
-        pen.write("Score: {}".format(score), align="center", font=("Courier", 18, "normal"))
         pen.goto(400, 230)
-        pen.write("Enemies: {}".format(active_enemies), align="center", font=("Courier", 18, "normal"))
-    
+        character_pen.scale = 1.0
+        character_pen.draw_string(pen, "SPACE ARENA".format(score), 330, 270)
+        character_pen.draw_string(pen, "SCORE {}".format(score), 330, 240)
+        character_pen.draw_string(pen, "Enemies {}".format(active_enemies), 330, 210)
+        character_pen.draw_string(pen, "Lives {}".format(3), 330, 180)
+        character_pen.draw_string(pen, "Level {}".format(game.level), 330, 150)
+        
     def render_border(self, pen, x_offset, y_offset, screen_width, screen_height):
         pen.color("white")
         pen.width(3)
@@ -472,51 +541,37 @@ class Radar():
         self.width = width
         self.height = height
         
-    def render(self, pen, sprites, render):         
+    def render(self, pen, sprites):         
         # Draw radar border
+
+        
+        character_pen.draw_string(pen, "RADAR", self.x -30, self.y + 130)
+        
         pen.color("white")
         pen.penup()
         
-        # Draw opaque background
-        # pen.goto(self.x, self.y)
-        # pen.shape("square")
-        # pen.setheading(0)
-        
-        # pen.color("white")
-        # pen.shapesize(stretch_wid=self.width/20, stretch_len=self.height/20, outline=None)
-        # pen.stamp()
-        
-        # pen.color("#111111")
-        # pen.shapesize(stretch_wid=self.width/21, stretch_len=self.height/21, outline=None)
-        # pen.stamp()
-        if render:
-            # Draw sprite radar images
-            for sprite in sprites:
-                if sprite.state == "active" and Sprite.is_collision(player, sprite, player.sensor_range):
-                    radar_x = self.x + (sprite.x - player.x) * (self.width / game.width)
-                    radar_y = self.y + (sprite.y - player.y) * (self.height / game.height)
-                    pen.goto(radar_x, radar_y)
-                    pen.color(sprite.color)
-                    pen.shape(sprite.shape)
-                    pen.setheading(sprite.heading)
-                    if isinstance(sprite, Player):
-                        pen.shapesize(stretch_wid=0.1, stretch_len=0.2, outline=None) 
-                    elif isinstance(sprite, Missile):
-                        pen.shapesize(stretch_wid=0.05, stretch_len=0.5, outline=None)
-                    else:
-                        pen.shapesize(stretch_wid=0.2, stretch_len=0.2, outline=None)   
-                    pen.stamp()
-            pen.setheading(90)
-            pen.goto(self.x + 100, self.y)
-            pen.pendown()
-            pen.circle(100)
-            pen.penup()
-        else:
-            pen.goto(self.x, self.y)
-            pen.write("Radar OFF", align="center", font=("Courier", 15, "normal"))
-            pen.goto(self.x, self.y - 20)
-            pen.write("Press r to Enable", align="center", font=("Courier", 15, "normal"))
 
+        # Draw sprite radar images
+        for sprite in sprites:
+            if sprite.state == "active" and Sprite.is_collision(player, sprite, player.sensor_range):
+                radar_x = self.x + (sprite.x - player.x) * (self.width / game.width)
+                radar_y = self.y + (sprite.y - player.y) * (self.height / game.height)
+                pen.goto(radar_x, radar_y)
+                pen.color(sprite.color)
+                pen.shape(sprite.shape)
+                pen.setheading(sprite.heading)
+                if isinstance(sprite, Player):
+                    pen.shapesize(stretch_wid=0.1, stretch_len=0.2, outline=None) 
+                elif isinstance(sprite, Missile):
+                    pen.shapesize(stretch_wid=0.05, stretch_len=0.5, outline=None)
+                else:
+                    pen.shapesize(stretch_wid=0.2, stretch_len=0.2, outline=None)   
+                pen.stamp()
+        pen.setheading(90)
+        pen.goto(self.x + 100, self.y)
+        pen.pendown()
+        pen.circle(100)
+        pen.penup()
 
 # Set up the game
 game = Game(1600, 1200)
@@ -532,7 +587,7 @@ for _ in range(3):
 
 # Create enemies
 enemies = []
-for _ in range(10):
+for _ in range(50):
     enemies.append(Enemy(0.0, 0.0))
     
 for enemy in enemies:
@@ -546,7 +601,7 @@ for enemy in enemies:
     enemy.dy = dy
 
 stars = []    
-for _ in range(10):
+for _ in range(20):
     x = random.randint(int(-game.width/4.0), int(game.width/4.0))
     y = random.randint(int(-game.height/4.0), int(game.height/4.0))
     stars.append(Star(x, y))
@@ -707,7 +762,7 @@ while True:
     game.render_info(pen, player.score, active_enemies)
     
     # Render the radar
-    radar.render(pen, sprites, game.show_radar)
+    radar.render(pen, sprites)
     
     # Update the screen
     wn.update()
