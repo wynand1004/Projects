@@ -267,6 +267,8 @@ class Player(Sprite):
         self.max_health = 40
         self.health = self.max_health
         self.sensor_range = 500
+        self.thrust = 0.0
+        self.acceleration = 0.2
         
     def rotate_left(self):
         self.da = 10.0
@@ -278,7 +280,7 @@ class Player(Sprite):
         self.da = 0.0
         
     def accelerate(self):
-        self.thrust += 0.2
+        self.thrust += self.acceleration
         
         dx = math.cos(math.radians(self.heading + 180)) * 5 
         dy = math.sin(math.radians(self.heading + 180)) * 5
@@ -309,6 +311,7 @@ class Player(Sprite):
         self.y = 0.0
         self.dx = 0.0
         self.dy = 0.0
+        self.da = 0.0
         self.heading = 90.0
         self.health = self.max_health
         
@@ -620,6 +623,49 @@ class Radar():
         pen.circle(100)
         pen.penup()
 
+class Camera():
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.dx = 0
+        self.dy = 0
+        self.heading = 90
+        
+        self.thrust = 3
+        
+        self.visible = False
+        
+    def toggle_visibility(self):
+        if self.visible:
+            self.visible = False
+        else:
+            self.visible = True
+                    
+    def update(self, player):
+        dy = player.y - self.y
+        dx = player.x - self.x
+        if dx != 0:
+            self.heading = math.degrees(math.atan2(dy,dx))
+        else:
+            self.heading = 90
+        
+        distance = math.sqrt(((self.x-player.x)**2) + ((self.y-player.y)**2))
+        
+        self.dx = math.cos(math.radians(self.heading)) * distance / 5
+        self.dy = math.sin(math.radians(self.heading)) * distance / 5
+        
+        self.x += self.dx
+        self.y += self.dy
+        
+    def render(self, pen):
+        if self.visible:
+            pen.shapesize(stretch_wid=0.3, stretch_len=0.3, outline=None) 
+            pen.goto(self.x - player.x - 100, self.y - player.y)
+            pen.shape("triangle")
+            pen.color("red")
+            pen.setheading(self.heading)
+            pen.stamp()
+
 # Set up the game
 game = Game(1600, 1200)
 
@@ -627,6 +673,9 @@ radar = Radar(400, -200, 200, 200)
 
 # Create the player
 player = Player()
+
+# Create the camera
+camera = Camera(player.x, player.y)
 
 missiles = []
 for _ in range(3):
@@ -697,7 +746,7 @@ wn.onkeyrelease(player.decelerate, "Up")
 wn.onkeypress(player.fire, "space")
 
 # Game settings
-wn.onkeypress(game.toggle_radar, "r")
+wn.onkeypress(camera.toggle_visibility, "c")
 
 def timer(game=game):
     os.system("clear")
@@ -712,22 +761,22 @@ while True:
     game.frame += 1
     
     # Render explosions
-    explosion.render(pen, player.x, player.y)
+    explosion.render(pen, camera.x, camera.y)
     
     # Render exhaust
-    exhaust.render(pen, player.x, player.y)
+    exhaust.render(pen, camera.x, camera.y)
     
     for sprite in background_sprites:
         sprite.update()
         if Sprite.is_on_screen(sprite, SCREEN_WIDTH, SCREEN_HEIGHT, player.x, player.y):
-            sprite.render(pen, player.x+100, player.y)
+            sprite.render(pen, camera.x+100, camera.y)
     
     # Move and render the sprites
     for sprite in sprites:
         if sprite.state == "active":
             sprite.update()
             if Sprite.is_on_screen(sprite, SCREEN_WIDTH, SCREEN_HEIGHT, player.x, player.y):
-                sprite.render(pen, player.x+100, player.y)
+                sprite.render(pen, camera.x+100, camera.y)
     
     active_enemies = 0
         
@@ -801,13 +850,17 @@ while True:
                         missile.damage *= 1.1
     
     # Render the game border
-    game.render_border(pen, player.x+100, player.y, SCREEN_WIDTH, SCREEN_HEIGHT)
+    game.render_border(pen, camera.x+100, camera.y, SCREEN_WIDTH, SCREEN_HEIGHT)
     
     # Render the score and game attributes
     game.render_info(pen, player.score, active_enemies)
     
     # Render the radar
     radar.render(pen, sprites)
+    
+    # Update the camera
+    camera.update(player)
+    camera.render(pen)
     
     # Update the screen
     wn.update()
