@@ -86,6 +86,10 @@ class CharacterPen:
     def draw_string(self, pen, str, x, y):
         pen.width(2)
         pen.color(self.color)
+        
+        # Center text
+        x -= 15 * self.scale * ((len(str) - 1) / 2)
+        
         for character in str.upper():
             self.draw_character(pen, character, x, y)
             x += 15 * self.scale
@@ -106,12 +110,15 @@ class CharacterPen:
 
 # Splash screen
 character_pen = CharacterPen("red", 3.0)
-character_pen.draw_string(pen, "SPACE ARENA", -220, -0)
+character_pen.draw_string(pen, "SPACE ARENA", 0, 50)
+
+character_pen.scale = 1.0
+character_pen.draw_string(pen, "by TokyoEdTech", 0, -20)
 
 wn.tracer(0)
 wn.update()
 
-time.sleep(5)
+time.sleep(3)
 
 class Game():
     def __init__(self, width, height):
@@ -143,11 +150,11 @@ class Game():
         pen.goto(400, 250)
         pen.goto(400, 230)
         character_pen.scale = 1.0
-        character_pen.draw_string(pen, "SPACE ARENA".format(score), 330, 270)
-        character_pen.draw_string(pen, "SCORE {}".format(score), 330, 240)
-        character_pen.draw_string(pen, "Enemies {}".format(active_enemies), 330, 210)
-        character_pen.draw_string(pen, "Lives {}".format(3), 330, 180)
-        character_pen.draw_string(pen, "Level {}".format(game.level), 330, 150)
+        character_pen.draw_string(pen, "SPACE ARENA".format(score), 400, 270)
+        character_pen.draw_string(pen, "SCORE {}".format(score), 400, 240)
+        character_pen.draw_string(pen, "Enemies {}".format(active_enemies), 400, 210)
+        character_pen.draw_string(pen, "Lives {}".format(3), 400, 180)
+        character_pen.draw_string(pen, "Level {}".format(game.level), 400, 150)
         
     def render_border(self, pen, x_offset, y_offset, screen_width, screen_height):
         pen.color("white")
@@ -178,7 +185,7 @@ class Sprite():
     
     @staticmethod
     def is_on_screen(sprite, screen_width, screen_height, x_offset, y_offset):
-        if sprite.x + 120 - x_offset < screen_width / 2 and sprite.x - x_offset > -screen_width / 2\
+        if sprite.x - x_offset < screen_width / 2 and sprite.x - x_offset > -screen_width / 2\
             and sprite.y - y_offset < screen_height /2 and sprite.y - y_offset > - screen_height / 2:    
             return True
         else:
@@ -198,6 +205,16 @@ class Sprite():
         self.x = x
         self.y = y
         self.state = "active"
+        
+    def bounce(self, other):
+        temp_dx = self.dx
+        temp_dy = self.dy
+        
+        self.dx = other.dx
+        self.dy = other.dy
+        
+        other.dx = temp_dx
+        other.dy = temp_dy 
 
     def update(self):        
         self.heading += self.da
@@ -262,6 +279,11 @@ class Player(Sprite):
         
     def accelerate(self):
         self.thrust += 0.2
+        
+        dx = math.cos(math.radians(self.heading + 180)) * 5 
+        dy = math.sin(math.radians(self.heading + 180)) * 5
+        
+        exhaust.explode(self.x - 100, self.y, dx, dy)
         
     def decelerate(self):
         self.thrust = 0.0
@@ -533,6 +555,31 @@ class Explosion():
             if particle.state == "active":
                 particle.update()
                 particle.render(pen, x_offset, y_offset) 
+                
+class Exhaust():
+    def __init__(self, number_of_particles):
+        self.particles = []
+        for _ in range(number_of_particles):
+            self.particles.append(Particle(0,0))
+            
+    def explode(self, x, y, dx_offset = 0, dy_offset = 0):
+        for particle in self.particles:
+            if particle.state == "inactive":
+                particle.color = random.choice(["red", "yellow"])
+                particle.x = x
+                particle.y = y
+                particle.dx = random.randint(-1, 1)
+                particle.dy = random.randint(-1, 1)
+                particle.dx += dx_offset
+                particle.dy += dy_offset
+                particle.state = "active"
+                
+    def render(self, pen, x_offset = 0, y_offset = 0):
+        for particle in self.particles:
+            if particle.state == "active":
+                particle.update()
+                pen.width(2)
+                particle.render(pen, x_offset, y_offset) 
 
 class Radar():
     def __init__(self, x, y, width, height):
@@ -542,14 +589,11 @@ class Radar():
         self.height = height
         
     def render(self, pen, sprites):         
-        # Draw radar border
-
-        
-        character_pen.draw_string(pen, "RADAR", self.x -30, self.y + 130)
+        # Draw radar border         
+        character_pen.draw_string(pen, "RADAR", self.x, self.y + 130)
         
         pen.color("white")
         pen.penup()
-        
 
         # Draw sprite radar images
         for sprite in sprites:
@@ -564,8 +608,11 @@ class Radar():
                     pen.shapesize(stretch_wid=0.1, stretch_len=0.2, outline=None) 
                 elif isinstance(sprite, Missile):
                     pen.shapesize(stretch_wid=0.05, stretch_len=0.5, outline=None)
-                else:
-                    pen.shapesize(stretch_wid=0.2, stretch_len=0.2, outline=None)   
+                elif isinstance(sprite, Enemy):
+                    pen.shapesize(stretch_wid=0.2, stretch_len=0.2, outline=None)
+                elif isinstance(sprite, Powerup):
+                    pen.shapesize(stretch_wid=0.2, stretch_len=0.2, outline=None)
+                    
                 pen.stamp()
         pen.setheading(90)
         pen.goto(self.x + 100, self.y)
@@ -587,7 +634,7 @@ for _ in range(3):
 
 # Create enemies
 enemies = []
-for _ in range(50):
+for _ in range(25):
     enemies.append(Enemy(0.0, 0.0))
     
 for enemy in enemies:
@@ -613,6 +660,8 @@ for _ in range(5):
     powerups.append(Powerup(x, y))
 
 explosion = Explosion(30)
+
+exhaust = Exhaust(15)
 
 # Create sprites list
 sprites = []
@@ -665,6 +714,9 @@ while True:
     # Render explosions
     explosion.render(pen, player.x, player.y)
     
+    # Render exhaust
+    exhaust.render(pen, player.x, player.y)
+    
     for sprite in background_sprites:
         sprite.update()
         if Sprite.is_on_screen(sprite, SCREEN_WIDTH, SCREEN_HEIGHT, player.x, player.y):
@@ -694,23 +746,16 @@ while True:
                     explosion.explode(center_x-100, center_y) 
                     
                     # Swap momentum for bounce                           
-                    temp_dx = player.dx
-                    temp_dy = player.dy
-                    
-                    player.dx = sprite.dx
-                    player.dy = sprite.dy
-                    
-                    sprite.dx = temp_dx
-                    sprite.dy = temp_dy
+                    player.bounce(sprite)
                     
                     # Check for player death
                     if player.health <= 0:
                         player.reset()
                     else:
                         if sprite.health > 0:
-                            player.health -= random.randint(0, int(sprite.health))
+                            player.health -= random.randint(int(sprite.health / 2.0), int(sprite.health))
                         if player.health > 0:
-                            sprite.health -= random.randint(0, int(player.health))
+                            sprite.health -= random.randint(int(player.health / 2.0), int(player.health))
                         if sprite.health <= 0:
                             sprite.state = "inactive"
 
