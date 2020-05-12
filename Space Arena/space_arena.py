@@ -9,6 +9,7 @@ import turtle
 import math
 import random
 import time
+import os
 
 SCREEN_WIDTH = 800  
 SCREEN_HEIGHT = 600
@@ -595,7 +596,8 @@ wn.onkeypress(player.fire, "space")
 wn.onkeypress(game.toggle_radar, "r")
 
 def timer(game=game):
-    print(game.frame)
+    os.system("clear")
+    print("FPS: {}".format(game.frame))
     game.frame = 0
     turtle.ontimer(timer, 1000)
     
