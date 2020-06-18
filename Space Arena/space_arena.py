@@ -10,15 +10,45 @@ import math
 import random
 import time
 import os
+import platform
+
+# If on Windows, import winsound or, better yet, switch to Linux!
+if platform.system() == "Windows":
+    try:
+        import winsound
+    except:
+        print ("Winsound module not available.")
+        
+def play_sound(sound_file, time = 0):
+    # Windows
+    if platform.system() == 'Windows':
+        winsound.PlaySound(sound_file, winsound.SND_ASYNC)
+    # Linux
+    elif platform.system() == "Linux":
+        os.system("aplay -q {}&".format(sound_file))
+    # Mac
+    else:
+        os.system("afplay {}&".format(sound_file))
+
+    if time > 0:
+        turtle.ontimer(lambda: play_sound(sound_file, time), t=int(time * 1000))
+        
+
 
 SCREEN_WIDTH = 800  
 SCREEN_HEIGHT = 600
 
 wn = turtle.Screen()
 wn.setup(width = SCREEN_WIDTH + 220, height = SCREEN_HEIGHT + 20)
-wn.title("Space Arena! by #TokyoEdTech")
+wn.title("Space Arena! BY TokyoEdTech")
 wn.bgcolor("black")
 
+# Start the BGM
+play_sound("bgm.wav", 120)
+
+images = ["hunter.gif", "surveillance.gif", "mine.gif", "powerup.gif"]
+for image in images:
+    wn.register_shape(image)
 
 pen = turtle.Turtle()
 pen.speed(0)
@@ -43,38 +73,29 @@ class CharacterPen:
         self.characters["8"] = ((-5, 0), (5, 0), (5, 10), (-5, 10), (-5, -10), (5, -10), (5, 0))
         self.characters["9"] = ((5, -10), (5, 10), (-5, 10), (-5, 0), (5, 0))
         self.characters["0"] = ((-5, 10), (5, 10), (5, -10), (-5, -10), (-5, 10))
-        
-        self.characters["S"] = ((5, 10), (-5, 10), (-5, 0), (5, 0), (5, -10), (-5, -10))
-        self.characters["C"] = ((5, 10), (-5, 10), (-5, -10), (5, -10))
-        self.characters["O"] = ((-5, 10), (5, 10), (5, -10), (-5, -10), (-5, 10))
-        self.characters["R"] = ((-5, -10), (-5, 10), (5, 10), (5, 0), (-5, 0), (5, -10))
-        self.characters["E"] = ((5, 10), (-5, 10), (-5, 0), (0, 0), (-5, 0), (-5, -10), (5, -10))
-        
-        self.characters["G"] = ((5, 10), (-5, 10), (-5, -10), (5, -10), (5, 0), (0, 0))
+
         self.characters["A"] = ((-5, -10), (-5, 10), (5, 10), (5, -10), (5, 0), (-5, 0))
-        self.characters["M"] = ((-5, -10), (-3, 10), (0, 0), (3, 10), (5, -10))
-            
-        self.characters["V"] = ((-5, 10), (0, -10), (5, 10))
-        
-        self.characters["L"] = ((-5, 10), (-5, -10), (5, -10))
+        self.characters["B"] = ((-5, -10), (-5, 10), (3, 10), (3, 0), (-5, 0), (5,0), (5, -10), (-5, -10))
+        self.characters["C"] = ((5, 10), (-5, 10), (-5, -10), (5, -10))
+        self.characters["D"] = ((-5, 10), (-5, -10), (5, -8), (5, 8), (-5, 10))
+        self.characters["E"] = ((5, 10), (-5, 10), (-5, 0), (0, 0), (-5, 0), (-5, -10), (5, -10))
+        self.characters["F"] = ((5, 10), (-5, 10), (-5, 0), (5, 0), (-5, 0), (-5, -10))
+        self.characters["G"] = ((5, 10), (-5, 10), (-5, -10), (5, -10), (5, 0), (0, 0))
+        self.characters["H"] = ((-5, 10), (-5, -10), (-5, 0), (5, 0), (5, 10), (5, -10))
         self.characters["I"] = ((-5, 10), (5, 10), (0, 10), (0, -10), (-5, -10), (5, -10))
-        
-        self.characters["F"] = ((5, 10), (-5, 10), (-5, 0), (5, 0), (-5, 0), (-5, -10))     
-        self.characters["U"] = ((-5, 10), (-5, -10), (5, -10), (5, 10))
-        
-        self.characters["H"] = ((-5, 10), (-5, -10), (-5, 0), (5, 0), (5, 10), (5, -10))       
-        self.characters["D"] = ((-5, 10), (-5, -10), (5, -8), (5, 8), (-5, 10))  
-        
-        self.characters["P"] = ((-5, -10), (-5, 10), (5, 10), (5, 0), (-5, 0)) 
-        self.characters["N"] = ((-5, -10), (-5, 10), (5, -10), (5, 10))   
-        
-        self.characters["N"] = ((-5, -10), (-5, 10), (5, -10), (5, 10))   
-        
-        self.characters["B"] = ((-5, -10), (-5, 10), (3, 10), (3, 0), (-5, 0), (5,0), (5, -10), (-5, -10))   
         self.characters["J"] = ((5, 10), (5, -10), (-5, -10), (-5, 0))   
-        self.characters["K"] = ((-5, 10), (-5, -10), (-5, 0), (5, 10), (-5, 0), (5, -10))   
-        self.characters["Q"] = ((5, -10), (-5, -10), (-5, 10), (5, 10), (5, -10), (2, -7), (6, -11))   
-        self.characters["T"] = ((-5, 10), (5, 10), (0, 10), (0, -10))   
+        self.characters["K"] = ((-5, 10), (-5, -10), (-5, 0), (5, 10), (-5, 0), (5, -10))
+        self.characters["L"] = ((-5, 10), (-5, -10), (5, -10))
+        self.characters["M"] = ((-5, -10), (-3, 10), (0, 0), (3, 10), (5, -10))
+        self.characters["N"] = ((-5, -10), (-5, 10), (5, -10), (5, 10))
+        self.characters["O"] = ((-5, 10), (5, 10), (5, -10), (-5, -10), (-5, 10))
+        self.characters["P"] = ((-5, -10), (-5, 10), (5, 10), (5, 0), (-5, 0))
+        self.characters["Q"] = ((5, -10), (-5, -10), (-5, 10), (5, 10), (5, -10), (2, -7), (6, -11))
+        self.characters["R"] = ((-5, -10), (-5, 10), (5, 10), (5, 0), (-5, 0), (5, -10))
+        self.characters["S"] = ((5, 8), (5, 10), (-5, 10), (-5, 0), (5, 0), (5, -10), (-5, -10), (-5, -8))
+        self.characters["T"] = ((-5, 10), (5, 10), (0, 10), (0, -10)) 
+        self.characters["V"] = ((-5, 10), (0, -10), (5, 10)) 
+        self.characters["U"] = ((-5, 10), (-5, -10), (5, -10), (5, 10)) 
         self.characters["W"] = ((-5, 10), (-3, -10), (0, 0), (3, -10), (5, 10))   
         self.characters["X"] = ((-5, 10), (5, -10), (0, 0), (-5, -10), (5, 10))   
         self.characters["Y"] = ((-5, 10), (0, 0), (5, 10), (0,0), (0, -10))   
@@ -90,22 +111,29 @@ class CharacterPen:
         # Center text
         x -= 15 * self.scale * ((len(str) - 1) / 2)
         
-        for character in str.upper():
+        for character in str:
             self.draw_character(pen, character, x, y)
             x += 15 * self.scale
 
     def draw_character(self, pen, character, x, y):
         
-        character = character.upper()
+        scale = self.scale
         
+        if character in "abcdefghijklmnopqrstuvwxyz":
+            scale *= 0.8
+            y -= 10 * (1 - scale)
+
+        # Lowercase letters
+        character = character.upper()
+            
         if character in self.characters:
             pen.penup()
             xy = self.characters[character][0]
-            pen.goto(x + xy[0] * self.scale, y + xy[1] * self.scale)
+            pen.goto(x + xy[0] * scale, y + xy[1] * scale)
             pen.pendown()
             for i in range(1, len(self.characters[character])):
                 xy = self.characters[character][i]
-                pen.goto(x + xy[0] * self.scale, y + xy[1] * self.scale)
+                pen.goto(x + xy[0] * scale, y + xy[1] * scale)
             pen.penup()
 
 # Splash screen
@@ -113,12 +141,13 @@ character_pen = CharacterPen("red", 3.0)
 character_pen.draw_string(pen, "SPACE ARENA", 0, 50)
 
 character_pen.scale = 1.0
-character_pen.draw_string(pen, "by TokyoEdTech", 0, -20)
+character_pen.draw_string(pen, "BY TOKYOEDTECH", 0, -20)
+
+character_pen.scale = 1.0
+character_pen.draw_string(pen, "PRESS S TO START", 0, -100)
 
 wn.tracer(0)
 wn.update()
-
-time.sleep(3)
 
 class Game():
     def __init__(self, width, height):
@@ -126,9 +155,17 @@ class Game():
         self.height = height
         self.frame = 0
         self.level = 1
+        self.state = "splash"
         
-    def toggle_radar(self):
-        self.show_radar = not self.show_radar
+    def start_game(self):
+        self.state = "playing"
+        
+    def toggle_pause(self):
+        if self.state == "paused":
+            self.state = "playing"
+        
+        else:
+            self.state = "paused"
         
     def render_info(self, pen, score, active_enemies):
         pen.color("#222255")
@@ -151,9 +188,9 @@ class Game():
         pen.goto(400, 230)
         character_pen.scale = 1.0
         character_pen.draw_string(pen, "SPACE ARENA".format(score), 400, 270)
-        character_pen.draw_string(pen, "SCORE {}".format(score), 400, 240)
+        character_pen.draw_string(pen, "Score {}".format(score), 400, 240)
         character_pen.draw_string(pen, "Enemies {}".format(active_enemies), 400, 210)
-        character_pen.draw_string(pen, "Lives {}".format(3), 400, 180)
+        character_pen.draw_string(pen, "Lives {}".format(player.lives), 400, 180)
         character_pen.draw_string(pen, "Level {}".format(game.level), 400, 150)
         
     def render_border(self, pen, x_offset, y_offset, screen_width, screen_height):
@@ -269,6 +306,7 @@ class Player(Sprite):
         self.sensor_range = 500
         self.thrust = 0.0
         self.acceleration = 0.2
+        self.lives = 3
         
     def rotate_left(self):
         self.da = 10.0
@@ -280,6 +318,7 @@ class Player(Sprite):
         self.da = 0.0
         
     def accelerate(self):
+        play_sound("thruster.wav")
         self.thrust += self.acceleration
         
         dx = math.cos(math.radians(self.heading + 180)) * 5 
@@ -291,21 +330,30 @@ class Player(Sprite):
         self.thrust = 0.0
         
     def fire(self):
+        play_sound("missile_fire.wav")
+        
+        directions = [0, 5, -5]
+        
         for missile in missiles:
+            # print(directions)
             if missile.state == "ready":
                 missile.x = player.x
                 missile.y = player.y
-                missile.dx = player.dx
-                missile.dy = player.dy
-                missile.heading = player.heading
-                missile.dx += math.cos(math.radians(self.heading)) * missile.thrust
-                missile.dy += math.sin(math.radians(self.heading)) * missile.thrust
+                missile.heading = player.heading + directions[0]
+                missile.dx = math.cos(math.radians(missile.heading)) * missile.thrust
+                missile.dy = math.sin(math.radians(missile.heading)) * missile.thrust
+                missile.dx += player.dx
+                missile.dy += player.dy
                 missile.state = "active"
                 
-                self.dx -= missile.dx * 0.05
-                self.dy -= missile.dy * 0.05
-                break
-
+                self.dx -= missile.dx * 0.01
+                self.dy -= missile.dy * 0.01
+                
+                directions.pop(0)
+                
+                if len(directions) == 0:
+                    break
+                
     def reset(self):
         self.x = 0.0
         self.y = 0.0
@@ -355,14 +403,17 @@ class Enemy(Sprite):
         
         if self.type == "hunter":
             self.color = "red"
+            self.shape = "hunter.gif"
             self.sensor_range = random.randint(100, 200)
             
         elif self.type == "mine":
             self.color = "orange"
+            self.shape = "mine.gif"
             self.sensor_range = random.randint(100, 200)
 
         elif self.type == "surveillance":
             self.color = "pink"
+            self.shape = "surveillance.gif"
             self.sensor_range = random.randint(200, 400)
 
     def update(self):
@@ -512,6 +563,7 @@ class Powerup(Sprite):
         Sprite.__init__(self, x, y, shape, color)
         self.dx = random.randint(-30, 30) / 10.0
         self.dy = random.randint(-30, 30) / 10.0
+        self.shape = "powerup.gif"
 
 class Particle(Sprite):
     def __init__(self, x, y, shape = "triangle", color = "red"):
@@ -543,6 +595,7 @@ class Explosion():
             self.particles.append(Particle(0,0))
             
     def explode(self, x, y, dx_offset = 0, dy_offset = 0):
+        play_sound("explosion.wav")
         for particle in self.particles:
             if particle.state == "inactive":
                 particle.x = x
@@ -573,8 +626,8 @@ class Exhaust():
                 particle.y = y
                 particle.dx = random.randint(-1, 1)
                 particle.dy = random.randint(-1, 1)
-                particle.dx += dx_offset
-                particle.dy += dy_offset
+                particle.dx += dx_offset * 2
+                particle.dy += dy_offset * 2
                 particle.state = "active"
                 
     def render(self, pen, x_offset = 0, y_offset = 0):
@@ -593,7 +646,7 @@ class Radar():
         
     def render(self, pen, sprites):         
         # Draw radar border         
-        character_pen.draw_string(pen, "RADAR", self.x, self.y + 130)
+        character_pen.draw_string(pen, "Radar", self.x, self.y + 130)
         
         pen.color("white")
         pen.penup()
@@ -631,8 +684,6 @@ class Camera():
         self.dy = 0
         self.heading = 90
         
-        self.thrust = 3
-        
         self.visible = False
         
     def toggle_visibility(self):
@@ -651,8 +702,8 @@ class Camera():
         
         distance = math.sqrt(((self.x-player.x)**2) + ((self.y-player.y)**2))
         
-        self.dx = math.cos(math.radians(self.heading)) * distance / 5
-        self.dy = math.sin(math.radians(self.heading)) * distance / 5
+        self.dx = math.cos(math.radians(self.heading)) * distance / 8
+        self.dy = math.sin(math.radians(self.heading)) * distance / 8
         
         self.x += self.dx
         self.y += self.dy
@@ -678,7 +729,7 @@ player = Player()
 camera = Camera(player.x, player.y)
 
 missiles = []
-for _ in range(3):
+for _ in range(30):
     missiles.append(Missile(0.0, 0.0))
 
 # Create enemies
@@ -710,7 +761,7 @@ for _ in range(5):
 
 explosion = Explosion(30)
 
-exhaust = Exhaust(15)
+exhaust = Exhaust(20)
 
 # Create sprites list
 sprites = []
@@ -747,6 +798,15 @@ wn.onkeypress(player.fire, "space")
 
 # Game settings
 wn.onkeypress(camera.toggle_visibility, "c")
+wn.onkeypress(camera.toggle_visibility, "C")
+
+# Start game (from splash screen)
+wn.onkeypress(game.start_game, "s")
+wn.onkeypress(game.start_game, "S")
+
+# Pause game
+wn.onkeypress(game.toggle_pause, "p")
+wn.onkeypress(game.toggle_pause, "P")
 
 def timer(game=game):
     os.system("clear")
@@ -758,114 +818,133 @@ def timer(game=game):
 turtle.ontimer(timer, 1000)
 
 while True:
-    game.frame += 1
     
-    # Render explosions
-    explosion.render(pen, camera.x, camera.y)
+    if game.state == "splash":
+        wn.update()
+        continue
+        
+    if game.state == "playing":
     
-    # Render exhaust
-    exhaust.render(pen, camera.x, camera.y)
-    
-    for sprite in background_sprites:
-        sprite.update()
-        if Sprite.is_on_screen(sprite, SCREEN_WIDTH, SCREEN_HEIGHT, player.x, player.y):
-            sprite.render(pen, camera.x+100, camera.y)
-    
-    # Move and render the sprites
-    for sprite in sprites:
-        if sprite.state == "active":
+        game.frame += 1
+        
+        # Render explosions
+        explosion.render(pen, camera.x, camera.y)
+        
+        # Render exhaust
+        exhaust.render(pen, camera.x, camera.y)
+        
+        for sprite in background_sprites:
             sprite.update()
             if Sprite.is_on_screen(sprite, SCREEN_WIDTH, SCREEN_HEIGHT, player.x, player.y):
                 sprite.render(pen, camera.x+100, camera.y)
-    
-    active_enemies = 0
         
-    # Check for collisions
-    for sprite in sprites:
-        # Check if sprite is active
-        if sprite.state == "active":
-            # Check if it is an enemy
-            if isinstance(sprite, Enemy):
-                # Count as active
-                active_enemies += 1
-                # Player collides with enemy
-                if Sprite.is_collision(player, sprite, 18.0):
-                    center_x = (player.x + sprite.x) / 2.0
-                    center_y = (player.y + sprite.y) / 2.0
-                    explosion.explode(center_x-100, center_y) 
-                    
-                    # Swap momentum for bounce                           
-                    player.bounce(sprite)
-                    
-                    # Check for player death
-                    if player.health <= 0:
-                        player.reset()
-                    else:
-                        if sprite.health > 0:
-                            player.health -= random.randint(int(sprite.health / 2.0), int(sprite.health))
-                        if player.health > 0:
-                            sprite.health -= random.randint(int(player.health / 2.0), int(player.health))
-                        if sprite.health <= 0:
-                            sprite.state = "inactive"
-
-                # Missile collides with enemy
-                for missile in missiles:
-                    if missile.state == "active":
-                        if Sprite.is_collision(missile, sprite, 13.0):
-                            sprite.health -= missile.damage
-                            sprite.dx += missile.dx / 3.0
-                            sprite.dy += missile.dy / 3.0
+        # Move and render the sprites
+        for sprite in sprites:
+            if sprite.state == "active":
+                sprite.update()
+                if Sprite.is_on_screen(sprite, SCREEN_WIDTH, SCREEN_HEIGHT, player.x, player.y):
+                    sprite.render(pen, camera.x+100, camera.y)
+        
+        active_enemies = 0
+            
+        # Check for collisions
+        for sprite in sprites:
+            # Check if sprite is active
+            if sprite.state == "active":
+                # Check if it is an enemy
+                if isinstance(sprite, Enemy):
+                    # Count as active
+                    active_enemies += 1
+                    # Player collides with enemy
+                    if Sprite.is_collision(player, sprite, 18.0):
+                        center_x = (player.x + sprite.x) / 2.0
+                        center_y = (player.y + sprite.y) / 2.0
+                        explosion.explode(center_x-100, center_y) 
+                        
+                        # Swap momentum for bounce                           
+                        player.bounce(sprite)
+                        
+                        # Check for player death
+                        if player.health <= 0:
+                            player.reset()
+                            player.lives -= 1
+                            if player.lives == 0:
+                                print("GAME OVER")
+                        else:
+                            if sprite.health > 0:
+                                player.health -= random.randint(int(sprite.health / 2.0), int(sprite.health))
+                            if player.health > 0:
+                                sprite.health -= random.randint(int(player.health / 2.0), int(player.health))
                             if sprite.health <= 0:
                                 sprite.state = "inactive"
-                                player.score += 10
-                            
-                            explosion.explode(missile.x-100, missile.y, -missile.dx, -missile.dy) 
-                            
-                            missile.reset()
 
-            # Powerup collides with missile
-            if isinstance(sprite, Powerup):
-            # Missile collides with enemy
-                for missile in missiles:
-                    if missile.state == "active":
-                        if Sprite.is_collision(missile, sprite, 13):
-                            sprite.state = "inactive"
-                            player.score -= 50
-                            
-                            explosion.explode(missile.x-100, missile.y, -missile.dx, -missile.dy)
-                            
-                            missile.reset()
-                        
-            # Check if it is a powerup and collides with player
-            if isinstance(sprite, Powerup):
-                if Sprite.is_collision(player, sprite, 18):
-                    sprite.state = "inactive"
-                    missiles.append(Missile(0, 0))
-                    missiles[-1].max_fuel = missiles[0].max_fuel
-                    missiles[-1].thrust = missiles[0].thrust
-                    sprites.append(missiles[-1])
+                    # Missile collides with enemy
                     for missile in missiles:
-                        missile.max_fuel *= 1.1
-                        missile.thrust *= 1.05
-                        missile.damage *= 1.1
-    
-    # Render the game border
-    game.render_border(pen, camera.x+100, camera.y, SCREEN_WIDTH, SCREEN_HEIGHT)
-    
-    # Render the score and game attributes
-    game.render_info(pen, player.score, active_enemies)
-    
-    # Render the radar
-    radar.render(pen, sprites)
-    
-    # Update the camera
-    camera.update(player)
-    camera.render(pen)
-    
-    # Update the screen
-    wn.update()
-    
-    # Clear everything
-    pen.clear()
+                        if missile.state == "active":
+                            if Sprite.is_collision(missile, sprite, 13.0):
+                                sprite.health -= missile.damage
+                                sprite.dx += missile.dx / 3.0
+                                sprite.dy += missile.dy / 3.0
+                                if sprite.health <= 0:
+                                    sprite.state = "inactive"
+                                    player.score += 10
+                                
+                                explosion.explode(missile.x-100, missile.y, -missile.dx, -missile.dy) 
+                                
+                                missile.reset()
+
+                # Powerup collides with missile
+                if isinstance(sprite, Powerup):
+                # Missile collides with enemy
+                    for missile in missiles:
+                        if missile.state == "active":
+                            if Sprite.is_collision(missile, sprite, 13):
+                                play_sound("explosion.wav")
+                                sprite.state = "inactive"
+                                player.score -= 50
+                                
+                                explosion.explode(missile.x-100, missile.y, -missile.dx, -missile.dy)
+                                
+                                missile.reset()
+                            
+                # Check if it is a powerup and collides with player
+                if isinstance(sprite, Powerup):
+                    if Sprite.is_collision(player, sprite, 18):
+                        play_sound("powerup.wav")
+                        sprite.state = "inactive"
+                        missiles.append(Missile(0, 0))
+                        missiles[-1].max_fuel = missiles[0].max_fuel
+                        missiles[-1].thrust = missiles[0].thrust
+                        sprites.append(missiles[-1])
+                        for missile in missiles:
+                            missile.max_fuel *= 1.1
+                            missile.thrust *= 1.05
+                            missile.damage *= 1.1
+        
+        # Render the game border
+        game.render_border(pen, camera.x+100, camera.y, SCREEN_WIDTH, SCREEN_HEIGHT)
+        
+        # Render the score and game attributes
+        game.render_info(pen, player.score, active_enemies)
+        
+        # Render the radar
+        radar.render(pen, sprites)
+        
+        # Update the camera
+        camera.update(player)
+        camera.render(pen)
+        
+        # Update the screen
+        wn.update()
+        
+        # Clear everything
+        pen.clear()
 
 # wn.mainloop()
+# Sounds from SoundBible.com
+# Title: Bottle Rocket License: Attribution 3.0 Recorded by Mike Koenig
+# Title: Grenade Explosion License: Attribution 3.0 Recorded by Mike Koenig
+# Title: Harpoon License: Attribution 3.0 Recorded by Mike Koenig
+# Title: Power Up Ray License: Noncommercial 3.0 Recorded by Mike Koenig
+# BGM FROM HERE: https://patrickdearteaga.com/arcade-music/
+
