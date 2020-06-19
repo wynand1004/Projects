@@ -101,8 +101,8 @@ class CharacterPen:
         self.characters["Y"] = ((-5, 10), (0, 0), (5, 10), (0,0), (0, -10))   
         self.characters["Z"] = ((-5, 10), (5, 10), (-5, -10), (5, -10))   
         
-        self.characters["-"] = ((-3, 0), (3, 0))  
-           
+        self.characters["-"] = ((-3, 0), (3, 0)) 
+         
         
     def draw_string(self, pen, str, x, y):
         pen.width(2)
@@ -138,13 +138,47 @@ class CharacterPen:
 
 # Splash screen
 character_pen = CharacterPen("red", 3.0)
-character_pen.draw_string(pen, "SPACE ARENA", 0, 50)
+character_pen.draw_string(pen, "SPACE ARENA", 0, 160)
 
 character_pen.scale = 1.0
-character_pen.draw_string(pen, "BY TOKYOEDTECH", 0, -20)
+character_pen.draw_string(pen, "BY TOKYOEDTECH", 0, 100)
+
+pen.color("white")
+pen.shape("triangle")
+
+pen.goto(-150, 20)
+pen.stamp()
 
 character_pen.scale = 1.0
-character_pen.draw_string(pen, "PRESS S TO START", 0, -100)
+character_pen.draw_string(pen, "Player", -150, -20)
+
+pen.shape("hunter.gif")
+pen.goto(0, 20)
+pen.stamp()
+character_pen.draw_string(pen, "Enemy", 0, -20)
+
+pen.shape("powerup.gif")
+pen.goto(150, 20)
+pen.stamp()
+character_pen.draw_string(pen, "Powerup", 150, -20)
+
+character_pen.draw_string(pen, "Up Arrow", -100, -60)
+character_pen.draw_string(pen, "Accelerate", 100, -60)
+
+character_pen.draw_string(pen, "Left Arrow", -100, -100)
+character_pen.draw_string(pen, "Rotate Left", 100, -100)
+
+character_pen.draw_string(pen, "Right Arrow", -100, -140)
+character_pen.draw_string(pen, "Rotate Right", 100, -140)
+
+character_pen.draw_string(pen, "Space", -100, -180)
+character_pen.draw_string(pen, "Fire", 100, -180)
+
+
+character_pen.scale = 1.0
+character_pen.draw_string(pen, "PRESS S TO START", 0, -240)
+
+
 
 wn.tracer(0)
 wn.update()
