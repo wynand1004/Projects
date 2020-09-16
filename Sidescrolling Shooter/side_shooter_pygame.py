@@ -17,6 +17,7 @@ WIDTH = 800
 HEIGHT = 600
 
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 
 # Create the screen
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -33,6 +34,7 @@ class Player():
         self.dy = 0
         self.dx = 0
         self.surface = pygame.image.load('player.png').convert()
+        self.score = 0
         
     def up(self):
         self.dy = -6
@@ -79,14 +81,21 @@ class Missile():
         self.y = 1000
         self.dx = 0
         self.surface = pygame.image.load('missile.png').convert()
+        self.state = "ready"
     
     def fire(self):
+        self.state = "firing"
         self.x = player.x + 25
         self.y = player.y + 16
         self.dx = 10
     
     def move(self):
-        self.x = self.x + self.dx 
+        if self.state == "firing":
+            self.x = self.x + self.dx 
+            
+        if self.x > 800:
+            self.state = "ready"
+            self.y = 1000
 
     def distance(self, other):
         return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
@@ -100,6 +109,7 @@ class Enemy():
         self.y = random.randint(0, 550)
         self.dx = random.randint(10, 50) / -10
         self.surface = pygame.image.load('enemy.png')
+        self.health = random.randint(5, 15)
 
     def move(self):
         self.x = self.x + self.dx
@@ -115,13 +125,55 @@ class Enemy():
     def render(self):
         screen.blit(self.surface, (int(self.x), int(self.y)))
 
+class Star():
+    def __init__(self):
+        self.x = random.randint(0, 1000)
+        self.y = random.randint(0, 550)
+        self.dx = random.randint(10, 50) / -30
+        images = ["yellow_star.png", "red_star.png", "white_star.png"]
+        self.surface = pygame.image.load(random.choice(images))
+
+    def move(self):
+        self.x = self.x + self.dx
+        
+        # Border check
+        if self.x < 0:
+            self.x = random.randint(800, 900)
+            self.y = random.randint(0, 550)        
+
+    def distance(self, other):
+        return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
+
+    def render(self):
+        screen.blit(self.surface, (int(self.x), int(self.y)))
+
+
+# Create sounds
+missile_sound = pygame.mixer.Sound("missile.wav")
+explosion_sound = pygame.mixer.Sound("explosion.wav")
+
+# Create font
+font = pygame.font.SysFont("comicsansms", 24)
+
 # Create objects        
 player = Player()
-missile = Missile()
+missiles = [Missile(), Missile(), Missile()]
 
 enemies = []
 for _ in range(5):
     enemies.append(Enemy())
+    
+stars = []
+for _ in range(30):
+    stars.append(Star())
+
+def fire_missile():
+    # Is the missile ready
+    for missile in missiles:
+        if missile.state == "ready":
+            missile.fire()
+            missile_sound.play()
+            break
 
 # Main game loop
 while True:
@@ -140,25 +192,43 @@ while True:
             elif event.key == pygame.K_RIGHT:
                 player.right()
             elif event.key == pygame.K_SPACE:
-                missile.fire()
+                fire_missile()
 
     # Update objects
     player.move()
-    missile.move()
+    
+    for missile in missiles:
+        missile.move()
+    
+    for star in stars:
+        star.move()
     
     for enemy in enemies:
         enemy.move()
 
         # Check for collision
-        if enemy.distance(missile) < 20:
-            enemy.x = random.randint(800, 900)
-            enemy.y = random.randint(0, 550)
-            missile.dx = 0
-            missile.x = 0
-            missile.y = 1000
+        for missile in missiles:
+            if enemy.distance(missile) < 20:
+                enemy.health -= 4
+                if enemy.health <= 0:
+                    explosion_sound.play()
+                    enemy.x = random.randint(800, 900)
+                    enemy.y = random.randint(0, 550)
+                else:
+                    enemy.x += 20
+
+                # Reset missile
+                missile.dx = 0
+                missile.x = 0
+                missile.y = 1000
+                missile.state = "ready"
+                
+                # Add to score
+                player.score += 10
         
         # Check for collision
         if enemy.distance(player) < 20:
+            explosion_sound.play()
             print("Game over!")
             pygame.quit()
             exit()    
@@ -166,12 +236,32 @@ while True:
     # Render (Draw stuff)
     # Fill the background color
     screen.fill(BLACK)
+     
+    # Render stars
+    for star in stars:
+        star.render()
     
     # Render objects
     player.render()
-    missile.render()
+    
+    for missile in missiles: 
+        missile.render()
+    
     for enemy in enemies:
         enemy.render()  
+
+    # Ammo counter
+    ammo = 0
+    for missile in missiles:
+        if missile.state == "ready":
+            ammo += 1
+    
+    for x in range(ammo):
+        screen.blit(missile.surface, (700 + 30 * x, 20))
+    
+    # Render the score
+    score_surface = font.render(f"Score: {player.score}", True, WHITE)
+    screen.blit(score_surface, (400, 20))
     
     pygame.display.flip()
     
