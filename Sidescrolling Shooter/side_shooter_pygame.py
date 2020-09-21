@@ -3,7 +3,7 @@
 # Geany IDE
 # Python 3.8 and Pygame
 # Linux
-# Live Coding Demo: https://youtu.be/2gYQSEwuC3k
+# Live Coding Demo: 
 
 import pygame
 import sys
@@ -18,6 +18,7 @@ HEIGHT = 600
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
 
 # Create the screen
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -35,6 +36,9 @@ class Player():
         self.dx = 0
         self.surface = pygame.image.load('player.png').convert()
         self.score = 0
+        self.max_health = 20
+        self.health = self.max_health
+        self.kills = 0
         
     def up(self):
         self.dy = -6
@@ -74,6 +78,9 @@ class Player():
             
     def render(self):
         screen.blit(self.surface, (int(self.x), int(self.y)))
+        
+        # Draw health meter
+        pygame.draw.line(screen, GREEN, (int(self.x), int(self.y)), (int(self.x + (40 * (self.health/self.max_health))), int(self.y)), 2)
 
 class Missile():
     def __init__(self):
@@ -108,22 +115,39 @@ class Enemy():
         self.x = 800
         self.y = random.randint(0, 550)
         self.dx = random.randint(10, 50) / -10
+        self.dy = 0
         self.surface = pygame.image.load('enemy.png')
-        self.health = random.randint(5, 15)
+        self.max_health = random.randint(5, 15)
+        self.health = self.max_health
+        self.type = "enemy"
+        
 
     def move(self):
         self.x = self.x + self.dx
+        self.y = self.y + self.dy
         
         # Border check
-        if self.x < 0:
+        if self.x < -30:
             self.x = random.randint(800, 900)
-            self.y = random.randint(0, 550)        
-
+            self.y = random.randint(0, 550) 
+            
+        # Check for border collision
+        if self.y < 0:
+            self.y = 0
+            self.dy *= -1
+            
+        elif self.y > 550 :
+            self.y = 550    
+            self.dy *= -1
+            
     def distance(self, other):
         return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
 
     def render(self):
         screen.blit(self.surface, (int(self.x), int(self.y)))
+        
+        # Draw health meter
+        pygame.draw.line(screen, GREEN, (int(self.x), int(self.y)), (int(self.x + (30 * (self.health/self.max_health))), int(self.y)), 2)
 
 class Star():
     def __init__(self):
@@ -209,11 +233,25 @@ while True:
         # Check for collision
         for missile in missiles:
             if enemy.distance(missile) < 20:
+                explosion_sound.play()
                 enemy.health -= 4
                 if enemy.health <= 0:
-                    explosion_sound.play()
                     enemy.x = random.randint(800, 900)
                     enemy.y = random.randint(0, 550)
+                    
+                    player.kills += 1
+                    if player.kills % 10 == 0:
+                        enemy.surface = pygame.image.load('boss.png').convert()
+                        enemy.max_health = 50
+                        enemy.health = enemy.max_health
+                        enemy.dy = random.randint(-5, 5)
+                        enemy.type = "boss"
+                    else:
+                        enemy.type = "enemy"
+                        enemy.dy = 0
+                        enemy.surface = pygame.image.load('enemy.png').convert()
+                        enemy.max_health = random.randint(5, 15)
+                        enemy.health = enemy.max_health
                 else:
                     enemy.x += 20
 
@@ -229,9 +267,16 @@ while True:
         # Check for collision
         if enemy.distance(player) < 20:
             explosion_sound.play()
-            print("Game over!")
-            pygame.quit()
-            exit()    
+            
+            player.health -= random.randint(5, 10)
+            enemy.health -= random.randint(5, 10)
+            enemy.x = random.randint(800, 900)
+            enemy.y = random.randint(0, 550)
+            
+            if player.health <= 0:
+                print("Game over!")
+                pygame.quit()
+                exit()    
 
     # Render (Draw stuff)
     # Fill the background color
@@ -260,8 +305,8 @@ while True:
         screen.blit(missile.surface, (700 + 30 * x, 20))
     
     # Render the score
-    score_surface = font.render(f"Score: {player.score}", True, WHITE)
-    screen.blit(score_surface, (400, 20))
+    score_surface = font.render(f"Score: {player.score} Kills: {player.kills}", True, WHITE)
+    screen.blit(score_surface, (380, 20))
     
     pygame.display.flip()
     
