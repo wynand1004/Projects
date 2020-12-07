@@ -50,8 +50,8 @@ listbox_tasks.pack(side=tkinter.LEFT)
 scrollbar_tasks = tkinter.Scrollbar(frame_tasks)
 scrollbar_tasks.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
-listbox_tasks.config(yscrollcommand=scrollbar_tasks.set)
-scrollbar_tasks.config(command=listbox_tasks.yview)
+listbox_tasks.configure(yscrollcommand=scrollbar_tasks.set)
+scrollbar_tasks.configure(command=listbox_tasks.yview)
 
 entry_task = tkinter.Entry(root, width=50)
 entry_task.pack()
