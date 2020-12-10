@@ -1,4 +1,4 @@
-# Live Coding: Frogger! Part 2
+# Live Coding: Frogger! Part 3
 # by @TokyoEdtech
 
 # Topics: Classes, Inheritance, Turtle Graphics
@@ -17,17 +17,21 @@ wn = turtle.Screen()
 wn.cv._rootwindow.resizable(False, False)
 wn.title("Frogger by @tokyoedtech")
 wn.setup(600, 800)
-wn.bgcolor("black")
+wn.bgcolor("green")
+wn.bgpic("background.gif")
 wn.tracer(0)
 
 # Register shape
-shapes = ["frog.gif", "car_left.gif", "car_right.gif", "log_full.gif", "turtle_left.gif", "turtle_right.gif", "turtle_right_half.gif", "turtle_left_half.gif", "turtle_submerged.gif"]
+shapes = ["frog.gif", "car_left.gif", "car_right.gif", "log_full.gif", "turtle_left.gif", "turtle_right.gif", "turtle_right_half.gif", 
+    "turtle_left_half.gif", "turtle_submerged.gif", "home.gif", "frog_home.gif"]
+    
 for shape in shapes:
     wn.register_shape(shape)
 
 pen = turtle.Turtle()
 pen.speed(0)
 pen.hideturtle()
+pen.penup()
 
 # Create classes
 class Sprite():
@@ -43,6 +47,9 @@ class Sprite():
         pen.shape(self.image)
         pen.stamp()
         
+    def update(self):
+        pass
+        
     def is_collision(self, other):
         # Axis Aligned Bounding Box
         x_collision = (math.fabs(self.x - other.x) * 2) < (self.width + other.width)
@@ -53,6 +60,7 @@ class Player(Sprite):
     def __init__(self, x, y, width, height, image):
         Sprite.__init__(self, x, y, width, height, image)
         self.dx = 0
+        self.collision = False
         
     def up(self):
         self.y += 50
@@ -152,17 +160,35 @@ class Turtle(Sprite):
             self.state = "full"
             self.start_time = time.time()            
 
+class Home(Sprite):
+    def __init__(self, x, y, width, height, image):
+        Sprite.__init__(self, x, y, width, height, image)
+        self.dx = 0
+
 # Create objects
 player = Player(0, -300, 40, 40, "frog.gif")
+
 car_left = Car(0, -250, 121, 40, "car_left.gif", -0.1)
 car_right = Car(0, -200, 121, 40, "car_right.gif", 0.1)
-log_right = Log(0, -150, 121, 40, "log_full.gif", 0.2)
-log_left = Log(0, -100, 121, 40, "log_full.gif", -0.2)
-turtle_right = Turtle(0, -50, 155, 40, "turtle_right.gif", 0.15)
-turtle_left = Turtle(0, 0, 155, 40, "turtle_left.gif", -0.15)
+car_left2 = Car(0, -150, 121, 40, "car_left.gif", -0.1)
+car_right2 = Car(0, -100, 121, 40, "car_right.gif", 0.1)
+car_left3 = Car(0, -50, 121, 40, "car_left.gif", -0.1)
+
+log_right = Log(0, 50, 121, 40, "log_full.gif", 0.2)
+log_left = Log(0, 100, 121, 40, "log_full.gif", -0.2)
+turtle_right = Turtle(0, 150, 155, 40, "turtle_right.gif", 0.15)
+turtle_left = Turtle(0, 200, 250, 40, "turtle_left.gif", -0.15)
+log_right2 = Log(0, 250, 250, 40, "log_full.gif", 0.2)
+
+home1 = Home(0, 300, 50, 50, "home.gif")
+home2 = Home(-100, 300, 50, 50, "home.gif")
+home3 = Home(-200, 300, 50, 50, "home.gif")
+home4 = Home(100, 300, 50, 50, "home.gif")
+home5 = Home(200, 300, 50, 50, "home.gif")
 
 # Create list of sprites
-sprites = [car_left, car_right, log_right, log_left, turtle_right, turtle_left]
+sprites = [car_left, car_right, log_right, log_left, turtle_right, turtle_left, 
+    car_left2, car_left3, car_right2, log_right2, home1, home2, home3, home4, home5]
 sprites.append(player)
 
 # Keyboard binding
@@ -180,6 +206,7 @@ while True:
     
     # Check for collisions
     player.dx = 0
+    player.collision = False
     for sprite in sprites:
         if player.is_collision(sprite):
             if isinstance(sprite, Car):
@@ -188,10 +215,22 @@ while True:
                 break
             elif isinstance(sprite, Log):
                 player.dx = sprite.dx
+                player.collision = True
                 break
             elif isinstance(sprite, Turtle) and sprite.state != "submerged":
                 player.dx = sprite.dx
+                player.collision = True
                 break
+            elif isinstance(sprite, Home):
+                player.x = 0
+                player.y = -300
+                sprite.image = "frog_home.gif"
+                break
+                
+    # Check if we are not touching above y = 0
+    if player.y > 0 and player.collision != True:
+        player.x = 0
+        player.y = -300
 
     # Update screen
     wn.update()
