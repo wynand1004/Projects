@@ -1,11 +1,12 @@
-# Live Coding: Frogger! Part 3
+# Live Coding: Frogger! Part 4
 # by @TokyoEdtech
 
 # Topics: Classes, Inheritance, Turtle Graphics
 # Adding game objects and their behavior
 
 # Shoutouts:
-# 16-Bit Members Kevin, Paul, and Jan!
+# 16-Bit Members Kevin, Paul, Jan, and Mohd
+# 8-Bit Member Kim-Siong
 
 import turtle
 import math
@@ -61,6 +62,7 @@ class Player(Sprite):
         Sprite.__init__(self, x, y, width, height, image)
         self.dx = 0
         self.collision = False
+        self.frogs_home = 0
         
     def up(self):
         self.y += 50
@@ -80,6 +82,11 @@ class Player(Sprite):
         if self.x < -300 or self.x > 300:
             self.x = 0
             self.y = -300
+            
+    def go_home(self):
+        self.dx = 0
+        self.x = 0
+        self.y = -325
             
 class Car(Sprite):
     def __init__(self, x, y, width, height, image, dx):
@@ -166,29 +173,50 @@ class Home(Sprite):
         self.dx = 0
 
 # Create objects
-player = Player(0, -300, 40, 40, "frog.gif")
+player = Player(0, -325, 40, 40, "frog.gif")
 
-car_left = Car(0, -250, 121, 40, "car_left.gif", -0.1)
-car_right = Car(0, -200, 121, 40, "car_right.gif", 0.1)
-car_left2 = Car(0, -150, 121, 40, "car_left.gif", -0.1)
-car_right2 = Car(0, -100, 121, 40, "car_right.gif", 0.1)
-car_left3 = Car(0, -50, 121, 40, "car_left.gif", -0.1)
+level_1 = [
+    Car(0, -275, 121, 40, "car_left.gif", -0.1),
+    Car(221, -275, 121, 40, "car_left.gif", -0.1),
+    
+    Car(0, -225, 121, 40, "car_right.gif", 0.1),
+    Car(221, -225, 121, 40, "car_right.gif", 0.1),
+    
+    Car(0, -175, 121, 40, "car_left.gif", -0.1),
+    Car(221, -175, 121, 40, "car_left.gif", -0.1),
+    
+    Car(0, -125, 121, 40, "car_right.gif", 0.1),
+    Car(221, -125, 121, 40, "car_right.gif", 0.1),
+    
+    Car(0, -75, 121, 40, "car_left.gif", -0.1),
+    Car(221, -75, 121, 40, "car_left.gif", -0.1),
+    
+    Log(0, 25, 161, 40, "log_full.gif", 0.2),
+    Log(261, 25, 161, 40, "log_full.gif", 0.2),
+    
+    Log(0, 75, 161, 40, "log_full.gif", -0.2),
+    Log(261, 75, 161, 40, "log_full.gif", -0.2),
+    
+    Turtle(0, 125, 155, 40, "turtle_right.gif", 0.15),
+    Turtle(255, 125, 155, 40, "turtle_right.gif", 0.15),
+    
+    Turtle(0, 175, 155, 40, "turtle_left.gif", -0.15),
+    Turtle(255, 175, 155, 40, "turtle_left.gif", -0.15),
+    
+    Log(0, 225, 161, 40, "log_full.gif", 0.2),
+    Log(261, 225, 161, 40, "log_full.gif", 0.2)
+    ]
 
-log_right = Log(0, 50, 121, 40, "log_full.gif", 0.2)
-log_left = Log(0, 100, 121, 40, "log_full.gif", -0.2)
-turtle_right = Turtle(0, 150, 155, 40, "turtle_right.gif", 0.15)
-turtle_left = Turtle(0, 200, 250, 40, "turtle_left.gif", -0.15)
-log_right2 = Log(0, 250, 250, 40, "log_full.gif", 0.2)
-
-home1 = Home(0, 300, 50, 50, "home.gif")
-home2 = Home(-100, 300, 50, 50, "home.gif")
-home3 = Home(-200, 300, 50, 50, "home.gif")
-home4 = Home(100, 300, 50, 50, "home.gif")
-home5 = Home(200, 300, 50, 50, "home.gif")
+homes = [
+    Home(0, 275, 50, 50, "home.gif"), 
+    Home(-100, 275, 50, 50, "home.gif"),
+    Home(-200, 275, 50, 50, "home.gif"),
+    Home(100, 275, 50, 50, "home.gif"),
+    Home(200, 275, 50, 50, "home.gif")
+    ]
 
 # Create list of sprites
-sprites = [car_left, car_right, log_right, log_left, turtle_right, turtle_left, 
-    car_left2, car_left3, car_right2, log_right2, home1, home2, home3, home4, home5]
+sprites = level_1 + homes
 sprites.append(player)
 
 # Keyboard binding
@@ -210,8 +238,7 @@ while True:
     for sprite in sprites:
         if player.is_collision(sprite):
             if isinstance(sprite, Car):
-                player.x = 0
-                player.y = -300
+                player.go_home()
                 break
             elif isinstance(sprite, Log):
                 player.dx = sprite.dx
@@ -222,16 +249,22 @@ while True:
                 player.collision = True
                 break
             elif isinstance(sprite, Home):
-                player.x = 0
-                player.y = -300
-                sprite.image = "frog_home.gif"
+                player.go_home()
+                sprite.image = "frog.gif"
+                player.frogs_home += 1
                 break
                 
     # Check if we are not touching above y = 0
     if player.y > 0 and player.collision != True:
-        player.x = 0
-        player.y = -300
+        player.go_home()
 
+    # Made it home 5 times
+    if player.frogs_home == 5:
+        player.go_home
+        player.frogs_home = 0
+        for home in homes:
+            home.image = "home.gif"
+    
     # Update screen
     wn.update()
 
