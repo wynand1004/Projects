@@ -1,8 +1,9 @@
-# Live Coding: Frogger! Part 4
+# Live Coding: Frogger! Part 5
 # by @TokyoEdtech
 
 # Topics: Classes, Inheritance, Turtle Graphics
 # Adding game objects and their behavior
+# Add a one minute timer
 
 # Shoutouts:
 # 16-Bit Members Kevin, Paul, Jan, and Mohd
@@ -24,7 +25,7 @@ wn.tracer(0)
 
 # Register shape
 shapes = ["frog.gif", "car_left.gif", "car_right.gif", "log_full.gif", "turtle_left.gif", "turtle_right.gif", "turtle_right_half.gif", 
-    "turtle_left_half.gif", "turtle_submerged.gif", "home.gif", "frog_home.gif"]
+    "turtle_left_half.gif", "turtle_submerged.gif", "home.gif", "frog_home.gif", "frog_small.gif"]
     
 for shape in shapes:
     wn.register_shape(shape)
@@ -63,6 +64,10 @@ class Player(Sprite):
         self.dx = 0
         self.collision = False
         self.frogs_home = 0
+        self.max_time = 60
+        self.time_remaining = 60
+        self.start_time = time.time()
+        self.lives = 3
         
     def up(self):
         self.y += 50
@@ -83,10 +88,24 @@ class Player(Sprite):
             self.x = 0
             self.y = -300
             
+        if self.y < -325:
+            self.y = -325
+        
+        self.time_remaining = self.max_time - round(time.time() - self.start_time)
+        
+        # Out of time
+        if self.time_remaining <= 0:
+            player.lives -= 1
+            self.go_home()
+            
     def go_home(self):
         self.dx = 0
         self.x = 0
         self.y = -325
+        self.max_time = 60
+        self.time_remaining = 60
+        self.start_time = time.time()
+        
             
 class Car(Sprite):
     def __init__(self, x, y, width, height, image, dx):
@@ -172,8 +191,27 @@ class Home(Sprite):
         Sprite.__init__(self, x, y, width, height, image)
         self.dx = 0
 
+class Timer():
+    def __init__(self, max_time):
+        self.x = 200
+        self.y = -375
+        self.max_time = max_time
+        self.width = 200
+        
+    def render(self, time, pen):
+        pen.color("green")
+        pen.pensize(5)
+        pen.penup()
+        pen.goto(self.x, self.y)
+        pen.pendown()
+        percent = time/self.max_time
+        dx = percent * self.width
+        pen.goto(self.x-dx, self.y)
+        pen.penup()
+
 # Create objects
 player = Player(0, -325, 40, 40, "frog.gif")
+timer = Timer(60)
 
 level_1 = [
     Car(0, -275, 121, 40, "car_left.gif", -0.1),
@@ -231,6 +269,16 @@ while True:
     for sprite in sprites:
         sprite.render(pen)
         sprite.update()
+        
+    # Render the timer
+    timer.render(player.time_remaining, pen)
+    
+    # Render the lives
+    pen.goto(-290, -375)
+    pen.shape("frog_small.gif")
+    for life in range(player.lives):
+        pen.goto(-280 + (life * 30), -375)
+        pen.stamp()
     
     # Check for collisions
     player.dx = 0
@@ -238,6 +286,7 @@ while True:
     for sprite in sprites:
         if player.is_collision(sprite):
             if isinstance(sprite, Car):
+                player.lives -= 1
                 player.go_home()
                 break
             elif isinstance(sprite, Log):
@@ -256,18 +305,26 @@ while True:
                 
     # Check if we are not touching above y = 0
     if player.y > 0 and player.collision != True:
+        player.lives -= 1
         player.go_home()
 
     # Made it home 5 times
     if player.frogs_home == 5:
-        player.go_home
+        player.go_home()
         player.frogs_home = 0
         for home in homes:
             home.image = "home.gif"
+        
+    # Player runs out of lives
+    if player.lives == 0:
+        player.go_home()
+        player.frogs_home = 0
+        for home in homes:
+            home.image = "home.gif"
+        player.lives = 3    
     
     # Update screen
     wn.update()
 
     # Clear the pen
     pen.clear()
-
