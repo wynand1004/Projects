@@ -1,0 +1,169 @@
+<html>
+<head>
+<title>
+Simple JavaScript Quiz
+</title>
+<style>
+body
+{
+    font-size: 20px;
+}
+
+h1 {
+    width: 25%;
+    text-align: center;
+}
+
+div {
+    width: 25%;
+    text-align: center;
+}
+
+button{
+    width: 25%;
+    color: white;
+    background-color: blue;
+    font-size: 18px;
+}
+
+.hide{
+    display: none;
+}
+
+.show{
+    display: block;
+}
+
+img{
+    width: 10%;
+    height: 10%;
+}
+
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+</style>
+</head>
+<body>
+<h1>Simple JavaScript Quiz</h1>
+
+<div id="divQuestion">Q1: What is the capital of Japan?</div>
+<button id="btnA1" onClick="process(1);">Tokyo</button><br>
+<button id="btnA2" onClick="process(2);">Kyoto</button>
+
+<br>
+
+<div>
+    <img class="hide" id="imgCorrect" src="correct.png">
+    <img class="hide" id="imgWrong" src="wrong.png">
+</div>
+
+<br>
+
+<div id="divResult"></div>
+
+</body>
+</html>
+<script>
+var q = 1;
+var score = 0;
+
+function process(a)
+{    
+    // Check Answers
+    if(q==1)
+    {
+        if(a==1)
+        {
+            right();
+            
+        }
+        else
+        {
+            wrong();
+
+        }
+    }
+
+    if(q==2)
+    {
+        if(a==2)
+        {
+            right();
+            
+        }
+        else
+        {
+            wrong();
+
+        }
+    } 
+    
+    if(q==3)
+    {
+        if(a==1)
+        {
+            right();
+            
+        }
+        else
+        {
+            wrong();
+
+        }
+    }   
+    // Show next question
+    // Add one to q
+    q++;
+
+    if(q==1)
+    {
+        updateQuestion("Q1: What is the capital of Japan?", "Tokyo", "Kyoto");
+    }
+    
+    if(q==2)
+    {
+        updateQuestion("Q2: What is the capital of South Korea?", "Busan", "Seoul");
+    }
+
+    if(q==3)
+    {
+        updateQuestion("Q3: What is the capital of China", "Beijing", "Shanghai");
+    }
+    
+    // No more questions
+    if(q==4)
+    {
+        document.getElementById("divQuestion").innerHTML = "Thank you for playing!";
+        document.getElementById("btnA1").innerHTML = "Game";
+        document.getElementById("btnA2").innerHTML = "Over";
+        document.getElementById("divResult").innerHTML = "Score: " + score;
+    }    
+    
+}
+
+function right(){
+    score++;
+    document.getElementById("imgCorrect").className = "show";
+    document.getElementById("imgWrong").className = "hide";
+    var ding = new Audio("ding.mp3");
+    ding.play();
+}
+
+function wrong(){
+    document.getElementById("imgCorrect").className = "hide";
+    document.getElementById("imgWrong").className = "show";
+    var buzzer = new Audio("buzzer.mp3");
+    buzzer.play();   
+}
+
+function updateQuestion(question, a1, a2){
+    document.getElementById("divQuestion").innerHTML = question;
+    document.getElementById("btnA1").innerHTML = a1;
+    document.getElementById("btnA2").innerHTML = a2;
+}
+
+</script>
