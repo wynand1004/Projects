@@ -1,0 +1,143 @@
+<html>
+<head>
+<title>
+Simple JavaScript Quiz
+</title>
+<style>
+body
+{
+    font-size: 20px;
+}
+
+h1 {
+    width: 25%;
+    text-align: center;
+}
+
+div {
+    width: 25%;
+    text-align: center;
+}
+
+button{
+    width: 25%;
+    color: white;
+    background-color: blue;
+    font-size: 18px;
+}
+
+.hide{
+    display: none;
+}
+
+.show{
+    display: block;
+}
+
+img{
+    width: 10%;
+    height: 10%;
+}
+
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+</style>
+</head>
+<body>
+<h1>Simple JavaScript Quiz</h1>
+
+<div id="divQuestion">Q1: What is the capital of Japan?</div>
+<button id="btnA1" onClick="process(1);">Tokyo</button><br>
+<button id="btnA2" onClick="process(2);">Kyoto</button>
+
+<br>
+
+<div>
+    <img class="hide" id="imgCorrect" src="correct.png">
+    <img class="hide" id="imgWrong" src="wrong.png">
+</div>
+
+<br>
+
+<div id="divResult"></div>
+
+</body>
+</html>
+<script>
+var q = 1; 
+var score = 0;   
+
+function process(a)
+{
+    // Check the answers
+    if(q==1)
+    {
+        if(a==1)
+        {
+            right();
+        }
+        else
+        {
+            wrong();
+        }
+    }
+    
+    if(q==2)
+    {
+        if(a==2)
+        {
+            right();
+        }
+        else
+        {
+            wrong();
+        }
+    }
+    
+    
+    // Show the next question
+    q++;
+    
+    if(q==2)
+    {
+        updateQuestion("Q2: What is the capital of South Korea?", "Busan", "Seoul");
+    }
+    
+    // Last
+    if(q==3)
+    {
+        updateQuestion("Thank you for playing!", "Game", "Over");
+        document.getElementById("divResult").innerHTML = "Score: " + score;
+    }
+    
+}
+
+function right()
+{
+    document.getElementById("imgCorrect").className = "show";
+    document.getElementById("imgWrong").className = "hide";
+    var ding = new Audio("ding.mp3");
+    ding.play();
+    score++;
+}
+
+function wrong()
+{
+    document.getElementById("imgWrong").className = "show";
+    document.getElementById("imgCorrect").className = "hide";
+    var buzzer = new Audio("buzzer.mp3");
+    buzzer.play();
+}
+
+function updateQuestion(question, a1, a2)
+{
+    document.getElementById("divQuestion").innerHTML = question;
+    document.getElementById("btnA1").innerHTML = a1;
+    document.getElementById("btnA2").innerHTML = a2;
+}
+
+</script>
