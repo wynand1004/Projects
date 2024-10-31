@@ -20,20 +20,7 @@ def show_path(node):
 
 # BFS
 def bfs(start, goal):
-	queue = [start]
-	visited = [start]
-	
-	while len(queue) != 0:
-		node = queue.pop(0)
-		
-		if node == goal:
-			break
-			
-		for edge in node.edges:
-			if edge not in visited:
-				visited.append(edge)
-				edge.parent = node
-				queue.append(edge)
+	pass
 
 # DFS
 def dfs(start, goal):
