@@ -221,7 +221,7 @@ centipedes = [Centipede(-280, 380, [], "green", 20)]
 
 # Create mushroom(s)
 mushrooms = []
-for _ in range(50):
+for _ in range(10):
     x = random.randrange(-300, 300, 20)
     y = random.randrange(-100, 380, 20)
     mushrooms.append(Mushroom(x, y, "white"))
@@ -289,8 +289,15 @@ while True:
     for centipede in centipedes:
         for segment in centipede.body:
             if weapon.is_collision(segment):
-                segment.color = "red"
-                weapon.y = 1000
+                # Check if it is the head
+                if centipede.body.index(segment) == 0:
+                    centipede.body.pop(0)
+                    if len(centipede.body) > 0:
+                        centipede.body[0].color = "red"
+                else:
+                    segment.color = "red"
+                    weapon.y = 1000
+                    mushrooms.append(Mushroom(segment.x, segment.y))
 
     for centipede in centipedes:
         segments = centipede.spawn()
@@ -298,3 +305,7 @@ while True:
             x = segments[0].x
             y = segments[0].y
             centipedes.append(Centipede(x, y, segments))
+            
+    for i in range(len(centipedes)-1, -1, -1):
+        if len(centipedes[i].body) == 0:
+            centipedes.remove(centipedes[i])
