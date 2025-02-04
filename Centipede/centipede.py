@@ -130,8 +130,8 @@ class Centipede:
 class Mushroom(Sprite):
     def __init__(self, x, y, color="white", shape="square"):
         super().__init__(x, y, color, shape)
-        self.health = 3
-        self.colors = ("black", "red", "yellow", "white")
+        self.health = 4
+        self.colors = ("black", "red", "orange", "yellow", "white")
         
     def register_hit(self):
         self.health -= 1
@@ -239,7 +239,7 @@ while True:
     wn.update()
     pen.clear()
     
-    # Move centipedes
+    # Move centipedes based on frames
     if frame == 0:
         for centipede in centipedes:
             centipede.move(mushrooms)
@@ -266,6 +266,7 @@ while True:
             
             if mushroom.health == 0:
                 mushrooms.remove(mushroom)
+                player.score += 1
         
     # Check for collisions with segments
     for i in range(len(centipedes)-1, -1, -1):
@@ -280,6 +281,7 @@ while True:
                         centipede.body[0].color = "red"
                     else:
                         centipedes.remove(centipede)
+                    player.score += 100
                 else:
                     segment.color = "red"
                     weapon.y = 1000
@@ -290,7 +292,9 @@ while True:
                         x = segments[0].x
                         y = segments[0].y
                         centipedes.append(Centipede(x, y, segments))
-            
+                    player.score += 10
+    
+    # Remove empty centipedes
     for i in range(len(centipedes)-1, -1, -1):
         if len(centipedes[i].body) == 0:
             centipedes.remove(centipedes[i])
@@ -298,4 +302,4 @@ while True:
     # Draw the score
     pen.goto(-280, 360)
     pen.color("white")
-    pen.write(f"Score: {player.score}", move=False, align='left', font=('Courier New', 24, 'normal')) 
+    pen.write(f"Score: {player.score}  Lives: {player.lives}", move=False, align='left', font=('Courier New', 24, 'normal')) 
