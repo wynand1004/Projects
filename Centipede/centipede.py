@@ -238,6 +238,10 @@ wn.onkeypress(player.go_up, "Up")
 wn.onkeypress(player.go_down, "Down")
 wn.onkeypress(player.go_left, "Left")
 wn.onkeypress(player.go_right, "Right")
+wn.onkeypress(player.go_up, "w")
+wn.onkeypress(player.go_down, "s")
+wn.onkeypress(player.go_left, "a")
+wn.onkeypress(player.go_right, "d")
 wn.onkeypress(weapon.fire, "space")
 
 # Main game loop
