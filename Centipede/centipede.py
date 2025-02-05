@@ -123,6 +123,10 @@ class Centipede:
             head.x -= dx
             self.direction = "down"
        
+    def goto(self, x, y):
+        for segment in self.body:
+            segment.goto(x, y)
+        
     def render(self, pen):
         for segment in self.body:
             segment.render(pen)
@@ -138,6 +142,11 @@ class Mushroom(Sprite):
         if self.health < 0:
             self.health = 0
         self.color = self.colors[self.health]
+        
+    def rejuvenate(self):
+        self.health = 4
+        self.color = self.colors[self.health]
+        
 
 class Player(Sprite):
     def __init__(self, x, y, color="yellow", shape="arrow"):
@@ -204,7 +213,7 @@ pen.penup()
 pen.hideturtle()
 
 # Create centipede(s)
-centipedes = [Centipede(-280, 380, [], "green", 20)]
+centipedes = [Centipede(-280, 380, [], "green", 10)]
 
 # Create mushroom(s)
 mushrooms = []
@@ -243,6 +252,7 @@ while True:
     if frame == 0:
         for centipede in centipedes:
             centipede.move(mushrooms)
+            
     frame += 1
     if frame == max_frames:
         frame = 0
@@ -267,6 +277,12 @@ while True:
             if mushroom.health == 0:
                 mushrooms.remove(mushroom)
                 player.score += 1
+                
+        if player.is_collision(mushroom):
+            player.x -= player.dx
+            player.y -= player.dy
+            player.dx = 0
+            player.dy = 0
         
     # Check for collisions with segments
     for i in range(len(centipedes)-1, -1, -1):
@@ -294,12 +310,38 @@ while True:
                         centipedes.append(Centipede(x, y, segments))
                     player.score += 10
     
+    # Check for collision with player
+    for centipede in centipedes:
+        for segment in centipede.body:
+            if(segment.is_collision(player)):
+                player.lives -= 1
+                player.goto(0, -300)
+                player.dx = 0
+                player.dy = 0
+                for centipede in centipedes:
+                    centipede.goto(0, 400)
+    
     # Remove empty centipedes
     for i in range(len(centipedes)-1, -1, -1):
         if len(centipedes[i].body) == 0:
             centipedes.remove(centipedes[i])
-            
+    
+    # End of level
+    if(len(centipedes)==0):
+        # 5 points for damaged mushrooms
+        # Rejuvenate mushrooms
+        for mushroom in mushrooms:
+            if mushroom.health < 4:
+                player.score += 5
+                mushroom.rejuvenate()
+                
+        # Start new centipede
+        centipedes = [Centipede(-280, 380, [], "green", 10)]
+    
     # Draw the score
     pen.goto(-280, 360)
     pen.color("white")
     pen.write(f"Score: {player.score}  Lives: {player.lives}", move=False, align='left', font=('Courier New', 24, 'normal')) 
+
+    # Debug
+    # print(f"# of centipedes: {len(centipedes)}")
