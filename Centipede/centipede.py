@@ -92,7 +92,7 @@ class Centipede:
         
         # Check for mushroom collision
         for mushroom in mushrooms:
-            if head.x + dx == mushroom.x and head.y + dy == mushroom.y:
+            if head.is_collision(mushroom):
                 if self.direction == "left" or self.direction == "right":
                     self.direction = "down"
                     return None
@@ -159,7 +159,7 @@ class Mushroom(Sprite):
 class Player(Sprite):
     def __init__(self, x, y, color="yellow", shape="arrow"):
         super().__init__(x, y, color, shape)
-        self.lives = 1
+        self.lives = 3
         self.speed = 2.5
         self.score = 0
         
