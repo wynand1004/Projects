@@ -56,16 +56,16 @@ class Centipede:
         
         self.direction = "right"
         
-    def spawn(self):
-        for i in range(1, len(self.body)):
-            segment = self.body[i]
-            if segment.color == "red":
-                new_centipede = self.body[i+1:]
-                self.body = self.body[:i-1]
-                segment = None
-                return new_centipede
+    def spawn(self, segment):
+        i = self.body.index(segment)
+        new_centipede = self.body[i+1:]
+        self.body = self.body[:i-1]
+        segment = None
         
-        return None
+        if len(new_centipede) > 0:
+            return new_centipede
+        else:
+            return None
         
     def move(self, mushrooms = [], left_border = -280, right_border = 280):
         
@@ -122,6 +122,14 @@ class Centipede:
         if head.x > right_border or head.x < left_border:
             head.x -= dx
             self.direction = "down"
+            
+        if head.y < -380:
+            head.y -= dy
+            self.direction = "up"
+            
+        if head.y > 380:
+            head.y -+ dy
+            self.direction = "down"
        
     def goto(self, x, y):
         for segment in self.body:
@@ -151,7 +159,7 @@ class Mushroom(Sprite):
 class Player(Sprite):
     def __init__(self, x, y, color="yellow", shape="arrow"):
         super().__init__(x, y, color, shape)
-        self.lives = 3
+        self.lives = 1
         self.speed = 2.5
         self.score = 0
         
@@ -212,6 +220,17 @@ pen.lt(90)
 pen.penup()
 pen.hideturtle()
 
+# Create pen (for drawing text)
+text_pen = turtle.Turtle()
+text_pen.speed(0)
+text_pen.shape("square")
+text_pen.color("white")
+text_pen.lt(90)
+text_pen.penup()
+text_pen.hideturtle()
+
+
+
 # Create centipede(s)
 centipedes = [Centipede(-280, 380, [], "green", 10)]
 
@@ -244,14 +263,31 @@ wn.onkeypress(player.go_left, "a")
 wn.onkeypress(player.go_right, "d")
 wn.onkeypress(weapon.fire, "space")
 
+# Draw the score
+text_pen.goto(-280, 360)
+text_pen.color("white")
+text_pen.write(f"Score: {player.score}  Lives: {player.lives}", move=False, align='left', font=('Courier New', 24, 'normal')) 
+
+
 # Main game loop
 frame = 0
 max_frames = 10
+level = 1
 
 while True:
     wn.update()
     pen.clear()
     
+    if player.lives == 0:
+        text_pen.clear()
+        text_pen.goto(-280, 360)
+        text_pen.color("white")
+        text_pen.write(f"Score: {player.score}  Lives: {player.lives}", move=False, align='left', font=('Courier New', 24, 'normal')) 
+        text_pen.goto(-50, 0)
+        text_pen.color("RED")
+        text_pen.write(f"GAME OVER")
+        continue
+
     # Move centipedes based on frames
     if frame == 0:
         for centipede in centipedes:
@@ -303,16 +339,23 @@ while True:
                         centipedes.remove(centipede)
                     player.score += 100
                 else:
-                    segment.color = "red"
+                    # segment.color = "red"
                     weapon.y = 1000
                     mushrooms.append(Mushroom(segment.x, segment.y))
 
-                    segments = centipede.spawn()
+                    segments = centipede.spawn(segment)
                     if segments != None and len(segments) > 0:
                         x = segments[0].x
                         y = segments[0].y
                         centipedes.append(Centipede(x, y, segments))
                     player.score += 10
+                    
+                # Draw the score
+                text_pen.clear()
+                text_pen.goto(-280, 360)
+                text_pen.color("white")
+                text_pen.write(f"Score: {player.score}  Lives: {player.lives}", move=False, align='left', font=('Courier New', 24, 'normal')) 
+
     
     # Check for collision with player
     for centipede in centipedes:
@@ -322,8 +365,11 @@ while True:
                 player.goto(0, -300)
                 player.dx = 0
                 player.dy = 0
-                for centipede in centipedes:
-                    centipede.goto(0, 400)
+                centipedes.clear()
+                for _ in range(level):
+                    x = random.randrange(-280, 280, 20)
+                    size = random.randint(10, 10 + level * 2)
+                    centipedes.append(Centipede(x, 380, [], "green", size))
     
     # Remove empty centipedes
     for i in range(len(centipedes)-1, -1, -1):
@@ -339,13 +385,20 @@ while True:
                 player.score += 5
                 mushroom.rejuvenate()
                 
-        # Start new centipede
-        centipedes = [Centipede(-280, 380, [], "green", 10)]
-    
-    # Draw the score
-    pen.goto(-280, 360)
-    pen.color("white")
-    pen.write(f"Score: {player.score}  Lives: {player.lives}", move=False, align='left', font=('Courier New', 24, 'normal')) 
+        # Draw the score
+        text_pen.clear()
+        text_pen.goto(-280, 360)
+        text_pen.color("white")
+        text_pen.write(f"Score: {player.score}  Lives: {player.lives}", move=False, align='left', font=('Courier New', 24, 'normal')) 
 
+        # Start new centipede(s)
+        level += 1
+        centipedes.clear()
+        for _ in range(level):
+            x = random.randrange(-280, 280, 20)
+            size = random.randint(10, 10 + level * 2)
+            centipedes.append(Centipede(x, 380, [], "green", size))
+    
+    
     # Debug
     # print(f"# of centipedes: {len(centipedes)}")
