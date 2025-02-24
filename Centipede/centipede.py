@@ -229,8 +229,6 @@ text_pen.lt(90)
 text_pen.penup()
 text_pen.hideturtle()
 
-
-
 # Create centipede(s)
 centipedes = [Centipede(-280, 380, [], "green", 10)]
 
@@ -283,9 +281,9 @@ while True:
         text_pen.goto(-280, 360)
         text_pen.color("white")
         text_pen.write(f"Score: {player.score}  Lives: {player.lives}", move=False, align='left', font=('Courier New', 24, 'normal')) 
-        text_pen.goto(-50, 0)
+        text_pen.goto(-175, 0)
         text_pen.color("RED")
-        text_pen.write(f"GAME OVER")
+        text_pen.write(f"GAME OVER!", move=False, align='left', font=('Courier New', 48, 'normal'))
         continue
 
     # Move centipedes based on frames
